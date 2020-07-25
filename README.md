@@ -7,7 +7,7 @@ so its a work in progress, i started making this as an idea for an ESS IA but it
 
 currently mad at pygame --> open to suggestions for any other graphic library (not tkinter pls i just want something easy) to replace it
 
-how it works /// what it does???
+how it works / what it does???
 
 there are agents that interact with one another (bet): 
 
