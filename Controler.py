@@ -6,6 +6,11 @@ from Entities import Entities
 import time
 import os, sys, select, termios
 
+"""
+The Mother of Classes:
+manages the grid, the environment, and the entities
+calls on epochs
+"""
 class Controler(object):
     def __init__(self, grid_size, starting_creatures):
         self.grid_size = grid_size
