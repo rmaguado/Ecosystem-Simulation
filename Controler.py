@@ -14,28 +14,36 @@ calls on epochs
 class Controler(object):
     def __init__(self, grid_size, starting_creatures):
         self.grid_size = grid_size
+        
+        # initialize one of each main agent
         self.environment = Environment(grid_size)
         self.entities = Entities(grid_size, starting_creatures, self.environment)
         self.window = Window(grid_size)
+        
         self.epoch = 0
         self.to_iterate = 0
         self.logs = []
         self.running = True
         
+        # start
         self.clear()
         self.render()
         self.idle()
         
+    # the terminal code for erasing the screen
     def clear(self):
         print("\033c")
         
+    # calls window class to render
     def render(self):
         self.window.render(self.environment.grass, self.entities.creatures)
         
+    # check for events for when to render
     def refresh(self):
         if self.window.handle_event():
             self.render()
             
+    # handles one iteration of turns
     def next_epoch(self):
         self.environment.growth_cycle()
         self.logs.append(self.entities.iterate())
@@ -92,6 +100,7 @@ class Controler(object):
             self.to_iterate = 0
             self.console()
             
+    # interactions with the user between epochs
     def idle(self):
         self.console()
         
@@ -129,8 +138,10 @@ class Controler(object):
             if self.window.quit_command:
                 self.running = False
         
-
+# set the directory to where the launcher was executed
 os.chdir(os.path.dirname(sys.argv[0]))
+
+# the start
 controler = Controler(grid_size=10, starting_creatures=5)
 
 
