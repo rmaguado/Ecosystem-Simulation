@@ -100,8 +100,9 @@ class Window(object):
                 pygame.display.set_mode((self.width,self.height),pygame.RESIZABLE)
                 update = True
             elif event.type == QUIT:
-                self.quit()
+                update = False
                 self.quit_command = True
+                self.quit()
                 break
         return update
                 
