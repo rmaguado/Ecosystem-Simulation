@@ -70,8 +70,11 @@ class Entities():
                 break
 
         return creature
-    
+
     def clear(self):
+        """
+        Empty creature objects from queue.
+        """
         for creature in self.creatures:
             self.entity_grid[creature.pos_x][creature.pos_y][:] = 0
         self.creatures = []
@@ -121,7 +124,7 @@ class Entities():
         terminated = None
         if action == 0:     # left
             reward, log, terminated = self.move_creature(creature, -1, 0)
-        elif action == 1:   # up 
+        elif action == 1:   # up
             reward, log, terminated = self.move_creature(creature, 0, 1)
         elif action == 2:   # right
             reward, log, terminated = self.move_creature(creature, 1, 0)
@@ -131,6 +134,9 @@ class Entities():
             reward, log, terminated = self.eat_grass(creature)
         elif action == 5:   # reproduce
             reward, log, terminated = self.reproduce_creature(creature)
+
+        if self.check_death(creature):
+            reward = -50
         creature.get_rewards(state, q_table, reward, self.get_state(creature.pos_x, creature.pos_y))
 
         if not self.general_nn:
@@ -167,6 +173,18 @@ class Entities():
 
         return reward
 
+    def check_death(self, creature):
+        """
+        Determines if a creature's is in direct danger of being eaten.
+        """
+        state = self.get_state(creature.pos_x, creature.pos_y)
+        for var_x, var_y in [[0, 1], [1, 0], [0, -1], [-1, 0]]:
+            competitor = self.get_creature(state[0][var_x + 2][var_y + 2][1])
+            if competitor:
+                if competitor.strength > creature.strength:
+                    return True
+        return False
+
     def move_creature(self, creature, x_change, y_change):
         """
         Calls to move the creature in a direction.
@@ -181,7 +199,7 @@ class Entities():
         if creature.pos_x + x_change >= 0 and creature.pos_x + x_change < self.params.grid_size and creature.pos_y + y_change >= 0 and creature.pos_y + y_change < self.params.grid_size and creature.energy > 1:
             # check if the new location is empty
             if self.entity_grid[creature.pos_x + x_change][creature.pos_y + y_change][0] == 0:
-                reward = self.danger_evasion(creature, x_change, y_change)
+                reward = 0 # self.danger_evasion(creature, x_change, y_change)
                 self.erase_creature(creature)
                 creature.pos_x += x_change
                 creature.pos_y += y_change
@@ -219,7 +237,7 @@ class Entities():
                         terminated = True
                         reward = -50
                         log = f"{creature.creature_id} moved to {creature.pos_x}, {creature.pos_y} and consumed {competitor.creature_id} but still starved to death"
- 
+
                     if not self.params.simulate:
                         self.delete_creature(competitor)
                 # if competitor is stronger
