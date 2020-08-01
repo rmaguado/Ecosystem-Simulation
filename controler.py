@@ -9,6 +9,7 @@ import sys
 import select
 import termios
 
+# from random import randint, uniform
 from pickle import load, dump
 from collections import deque
 import numpy
