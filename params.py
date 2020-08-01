@@ -12,7 +12,6 @@ class Params():
     Parameter Class
     """
     def __init__(self):
-
         self.grid_size = 20
         self.starting_creatures = 20
         self.simulate = False
@@ -20,7 +19,7 @@ class Params():
         self.window_show = True
 
         self.general_nn = True
-        self.inherit_nn = "weights-2020.07.31-12.41.36.model"
+        self.inherit_nn = None
         self.batch_size = 128
         self.exploration_rate = 0.01
         self.learning_rate = 0.05
