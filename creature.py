@@ -1,9 +1,7 @@
 """
 Creature Class
 """
-
 from random import randint, uniform
-
 from params import Params
 from neuralnet import Neuralnet
 
@@ -109,7 +107,7 @@ class Creature():
         """
         Stores rewards and states for the neural network to experience recall.
         """
-        self.neural_net.store(state, action, reward, future_state)
+        return self.neural_net.store(state, action, reward, future_state)
 
     def get_reproductive_cost(self):
         """
