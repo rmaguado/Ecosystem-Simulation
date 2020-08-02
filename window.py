@@ -36,7 +36,7 @@ class Window():
         pygame.display.set_icon(icon)
         pygame.init()
         self.canvas = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
-        pygame.display.set_caption('Homo Sapianal')
+        pygame.display.set_caption('Ecosystem Simulator')
         self.canvas2 = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
 
         self.mouse_pos_x = pygame.mouse.get_pos()[0]
