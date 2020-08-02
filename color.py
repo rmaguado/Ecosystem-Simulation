@@ -1,4 +1,10 @@
+"""
+Color values
+"""
 class Color():
+    """
+    Color values.
+    """
     def __init__(self):
         self.green = (66, 245, 152)
         self.light_green = (204, 255, 229)
