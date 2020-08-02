@@ -2,14 +2,11 @@
 """
 Ecosystem Simulator
 """
-
 import time
 import os
 import sys
 import select
 import termios
-
-# from random import randint, uniform
 from pickle import load, dump
 from collections import deque
 import numpy
@@ -145,8 +142,6 @@ class Controler():
         self.epoch += 1
         if len(self.entities.creatures) < 20:
             self.entities.spawn_creature()
-        if self.general_nn:
-            self.general_nn.retrain() # retrain every self.batch_size new states
         if self.params.window_show:
             self.render()
 
