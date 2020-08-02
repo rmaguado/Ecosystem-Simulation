@@ -86,7 +86,7 @@ class Neuralnet():
             for i in range(self.params.batch_size):
                 states[i] = batch[i][0]
             target = self.q_network.predict(states[:]) # makes prediction for all states in batch
-            for i in range(batch):
+            for i in range(len(batch)):
                 target[i][batch[i][1]] = batch[i][2] + self.params.discount * np.amax(self.target_network.predict(batch[i][3]))
             self.q_network.fit(states, target, epochs=1, verbose=0)
 
