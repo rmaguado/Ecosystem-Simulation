@@ -32,12 +32,9 @@ class Window():
         self.hovered_x = None
         self.hovered_y = None
 
-        icon = pygame.image.load('data/icon.jpeg')
-        pygame.display.set_icon(icon)
         pygame.init()
         self.canvas = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
         pygame.display.set_caption('Ecosystem Simulator')
-        self.canvas2 = pygame.display.set_mode((self.width, self.height), pygame.RESIZABLE)
 
         self.mouse_pos_x = pygame.mouse.get_pos()[0]
         self.mouse_pos_y = pygame.mouse.get_pos()[1]
@@ -173,4 +170,7 @@ class Window():
         pygame.display.flip()
 
     def close_window(self):
+        """
+        Closes pygame object.
+        """
         pygame.quit()
