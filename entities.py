@@ -1,11 +1,9 @@
 """
 Entities Class
 """
-
 import time
 from random import randint
 import numpy as np
-
 from params import Params
 from creature import Creature
 
@@ -18,6 +16,10 @@ class Entities():
         self.creatures = []
         self.entity_grid = np.zeros((self.params.grid_size, self.params.grid_size, 4)) # 4 is for has_entity, id, strength, energy
         self.environment = environment
+        if self.params.general_nn:
+            self.random_policy = True
+        else:
+            self.random_policy = False
 
         self.general_nn = general_nn
         self.inherit_nn = inherit_nn
@@ -37,7 +39,7 @@ class Entities():
         """
         self.entity_grid[creature.pos_x][creature.pos_y][0] = 1
         self.entity_grid[creature.pos_x][creature.pos_y][1] = creature.creature_id
-        self.entity_grid[creature.pos_x][creature.pos_y][2] = 1 / creature.strength
+        self.entity_grid[creature.pos_x][creature.pos_y][2] = creature.strength
         self.entity_grid[creature.pos_x][creature.pos_y][3] = 1 / creature.energy
 
     def erase_creature(self, creature):
@@ -114,7 +116,7 @@ class Entities():
         """
         state = self.get_state(creature.pos_x, creature.pos_y)
         q_table = creature.get_action(state)
-        if np.random.rand() < self.params.exploration_rate:
+        if np.random.rand() < self.params.exploration_rate or self.random_policy:
             action = randint(0, self.params.action_size-1)
         else:
             action = np.argmax(q_table)
@@ -137,10 +139,11 @@ class Entities():
 
         if self.check_death(creature):
             reward = -50
-        creature.get_rewards(state, q_table, reward, self.get_state(creature.pos_x, creature.pos_y))
-
-        if not self.general_nn:
-            creature.neural_net.retrain()
+        update_policy = creature.get_rewards(state, action, reward, self.get_state(creature.pos_x, creature.pos_y))
+        if update_policy:
+            self.random_policy = True
+            if self.params.verbose:
+                print(f"Randomness policy has been updated for: {creature.creature_id}")
 
         if self.params.verbose:
             actions = ['left ', 'up   ', 'right', 'down ', 'eat  ', 'repro']
