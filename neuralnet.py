@@ -1,14 +1,13 @@
 """
 Neural Net Class
 """
-
-from params import Params
 from random import sample
 from collections import deque
 import numpy as np
 from tensorflow.keras import Sequential
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.optimizers import Adam
+from params import Params
 
 class Neuralnet():
     """
@@ -19,9 +18,9 @@ class Neuralnet():
         self.state_size = (5, 5, self.params.state_features)
         self.optimizer = Adam(learning_rate=self.params.learning_rate)
 
-        self.experience_replay = deque(maxlen=4096)
+        self.experience_replay = deque(maxlen=2**14)
 
-        self.update_counter = 1
+        self.batch_counter = 1
         self.align_counter = 1
         self.q_network = self.compile_model()
         self.target_network = self.compile_model()
@@ -32,6 +31,12 @@ class Neuralnet():
         Store rewards and states for experience replay.
         """
         self.experience_replay.append((state, action, reward, next_state))
+        self.batch_counter += 1
+        if self.batch_counter % self.params.batch_size == 0:
+            self.retrain()
+        if len(self.experience_replay) == 4 * self.params.batch_size:
+            return True
+        return False
 
     def compile_model(self):
         """
@@ -72,13 +77,17 @@ class Neuralnet():
         """
         Train the neural net from a sample of the experience replay items.
         """
-        if self.align_counter % 64 == 0:
+        if self.align_counter % 3 == 0:
             self.align_target()
+
         if len(self.experience_replay) >= self.params.batch_size:
             batch = sample(self.experience_replay, self.params.batch_size)
-            for state, action, reward, next_state in batch:
-                target = self.q_network.predict(state)
-                target[0][np.argmax(action)] = reward + self.params.discount * np.amax(self.target_network.predict(next_state))
-                self.q_network.fit(state, target, epochs=1, verbose=0)
+            states = np.ndarray((self.params.batch_size, 5, 5, self.params.state_features))
+            for i in range(self.params.batch_size):
+                states[i] = batch[i][0]
+            target = self.q_network.predict(states[:]) # makes prediction for all states in batch
+            for i in range(batch):
+                target[i][batch[i][1]] = batch[i][2] + self.params.discount * np.amax(self.target_network.predict(batch[i][3]))
+            self.q_network.fit(states, target, epochs=1, verbose=0)
 
         self.align_counter += 1
