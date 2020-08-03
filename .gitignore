@@ -1,5 +1,3 @@
 __pycache__
-out/log*.*
-out/stack*.*
-out/weights*.*
+#out
 
