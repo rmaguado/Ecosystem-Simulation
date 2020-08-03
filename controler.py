@@ -32,19 +32,19 @@ class Controler():
             with open(f"out/log_epocs-{self.date_time}.txt", "w") as fname:
                 fname.write(line)
 
-        if self.params.inherit_nn:
+        if self.params.inherit_nn: # F
             self.inherit_nn = Neuralnet()
             self.inherit_nn.inherit_network(self.load_weights(self.params.inherit_nn))
         else:
-            self.inherit_nn = None
+            self.inherit_nn = None # T
 
-        if self.params.general_nn:
-            if self.params.inherit_nn:
+        if self.params.general_nn:  # T
+            if self.params.inherit_nn:  # F
                 self.general_nn = self.inherit_nn
-            else:
+            else: # T
                 self.general_nn = Neuralnet()
-            self.entities = Entities(environment=self.environment, general_nn=self.general_nn)
-        else:
+            self.entities = Entities(environment=self.environment, general_nn=self.general_nn) # new NN
+        else: # F
             self.general_nn = None
             self.entities = Entities(environment=self.environment, inherit_nn=self.inherit_nn)
 
@@ -53,7 +53,6 @@ class Controler():
         self.logs = deque(maxlen=64)
 
         self.running = True
-        self.clear()
 
         if self.params.simulate:
             self.load_scenario()
@@ -62,11 +61,19 @@ class Controler():
             self.window = Window()
             self.render()
 
-        self.idle()
+        if self.params.interactive:
+            self.clear()
+            self.idle()
+        else:
+            self.loop()
 
         # save neural network
         if self.params.general_nn:
             self.save_weights(neural_net=self.general_nn, fname=f"out/weights-{self.date_time}.model")
+        # save experience_replay
+        f_save = open( f"out/stack-{self.date_time}.memory" , "wb")
+        dump(self.general_nn.experience_replay, f_save)
+        f_save.close()
 
     def load_scenario(self):
         """
@@ -126,11 +133,16 @@ class Controler():
         """
         Next Iteration
         """
-        self.environment.growth_cycle(reset=self.params.simulate)
+        self.environment.grow_grass(reset=self.params.simulate)
+
         if self.params.simulate:
             self.load_scenario()
 
-        self.logs.append(self.entities.iterate())
+        # move creatures
+        iteration = self.entities.iterate()
+
+        # logs
+        self.logs.append(iteration)
         if self.params.verbose:
             now = time.strftime("%Y.%m.%d-%H.%M.%S")
             elapsed = time.time() - self.timestart
@@ -139,18 +151,13 @@ class Controler():
             with open(f"out/log_epocs-{self.date_time}.txt", "a") as fname:
                 fname.write(line)
 
-        self.epoch += 1
-        if len(self.entities.creatures) < 20:
-            self.entities.spawn_creature()
+        while len(self.entities.creatures) < self.params.min_n_creatures:
+            self.entities.spawn_creature()  ## verify that general_nn is acting
+
         if self.params.window_show:
             self.render()
-
-        self.params.learning_rate -= 0.0005
-        if self.params.learning_rate <= 0:
-            self.params.learning_rate = 0.05
-            self.entities.clear()
-            for _ in range(self.params.starting_creatures):
-                self.entities.spawn_creature()
+        
+        self.epoch += 1
 
     def console(self):
         """
@@ -243,6 +250,7 @@ class Controler():
 
             if self.to_iterate == -1:
                 self.next_epoch()
+                print(f"epoch: {self.epoch}")
             elif self.to_iterate > 0:
                 self.next_epoch()
                 self.to_iterate -= 1
@@ -252,6 +260,17 @@ class Controler():
                     self.to_iterate = 0
                     self.running = False
                     self.window.close_window()
+
+    def loop(self):
+        """
+        Loops epochs 
+        """
+        print(f"Running for {self.params.max_epochs} epochs")
+        for _ in range(self.params.max_epochs):
+            self.next_epoch()
+            if self.epoch % 10 == 0:
+                print(f"Epoch: {self.epoch}")
+
 
 try:
     os.chdir(os.path.dirname(sys.argv[0]))

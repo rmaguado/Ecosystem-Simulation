@@ -12,7 +12,7 @@ class Environment():
         self.params = Params()
         self.grass = np.ones((self.params.grid_size, self.params.grid_size))
 
-    def growth_cycle(self, reset=False):
+    def grow_grass(self, reset=False):
         """
         Grow grass in all squares by one cycle.
         """

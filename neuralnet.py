@@ -1,7 +1,7 @@
 """
 Neural Net Class
 """
-from random import sample
+from random import sample, seed
 from collections import deque
 import numpy as np
 from tensorflow.keras import Sequential
@@ -9,34 +9,47 @@ from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.optimizers import Adam
 from params import Params
 
+
 class Neuralnet():
     """
     Neural Net Class
     """
     def __init__(self):
         self.params = Params()
+        if self.params.seed:
+            seed(self.params.seed)
+
         self.state_size = (5, 5, self.params.state_features)
         self.optimizer = Adam(learning_rate=self.params.learning_rate)
 
-        self.experience_replay = deque(maxlen=2**14)
+        self.experience_replay = deque(maxlen=2**16)
 
         self.batch_counter = 1
         self.align_counter = 1
         self.q_network = self.compile_model()
         self.target_network = self.compile_model()
         self.align_target()
+        self.random_action = True
 
     def store(self, state, action, reward, next_state):
         """
         Store rewards and states for experience replay.
         """
         self.experience_replay.append((state, action, reward, next_state))
-        self.batch_counter += 1
         if self.batch_counter % self.params.batch_size == 0:
             self.retrain()
-        if len(self.experience_replay) == 4 * self.params.batch_size:
-            return True
-        return False
+        self.batch_counter += 1
+
+        # end of random
+        if self.batch_counter >= self.params.training_size:
+            if self.random_action:
+                print("End of random experiences")
+            self.random_action = False
+#            return False
+#        else:
+#            return True
+
+        return self.random_action
 
     def compile_model(self):
         """
@@ -44,11 +57,12 @@ class Neuralnet():
         """
         model = Sequential()
         model.add(Conv2D(filters=16, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
-        model.add(Conv2D(filters=4, kernel_size=3, strides=(1, 1), padding='valid'))
+        model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
         model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same'))
         model.add(Flatten())
+        model.add(Dense(64, activation='relu'))
         model.add(Dense(32, activation='relu'))
-        model.add(Dense(32, activation='relu'))
+        model.add(Dense(16, activation='relu'))
         model.add(Dense(self.params.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=self.optimizer)
         return model
@@ -69,6 +83,7 @@ class Neuralnet():
     def act(self, state):
         """
         Produces a q table
+        #not used
         """
         q_values = self.q_network.predict(state)
         return q_values
@@ -85,9 +100,12 @@ class Neuralnet():
             states = np.ndarray((self.params.batch_size, 5, 5, self.params.state_features))
             for i in range(self.params.batch_size):
                 states[i] = batch[i][0]
-            target = self.q_network.predict(states[:]) # makes prediction for all states in batch
-            for i in range(len(batch)):
-                target[i][batch[i][1]] = batch[i][2] + self.params.discount * np.amax(self.target_network.predict(batch[i][3]))
+            target = self.target_network.predict(states) # makes Q prediction for each action for all states in batch
+            for i in range(self.params.batch_size):
+                action_b = batch[i][1]
+                reward_b = batch[i][2]
+                nextstate_b = batch[i][3]
+                target[i][action_b] = reward_b + self.params.discount * np.amax(self.target_network.predict(nextstate_b))
             self.q_network.fit(states, target, epochs=1, verbose=0)
 
         self.align_counter += 1
