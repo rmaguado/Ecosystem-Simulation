@@ -38,6 +38,16 @@ class Entities():
             with open(f"out/log_out-{self.date_time}.tsv", "w") as fname:
                 fname.write(line)
 
+            header = "Parameters:\n\n"
+            with open(f"out/par_run-{self.date_time}.tsv", "w") as fname:
+                fname.write(header)
+            for i in dir(self.params):
+                if i[0:1] != "_" and not callable(getattr(self.params, i)):
+                    line = f'{i:>30}:\t {getattr(self.params, i)}\n'
+                    with open(f"out/par_run-{self.date_time}.tsv", "a") as fname:
+                        fname.write(line)
+
+
     def write_creature(self, creature):
         """
         Write in creature traits in grid.
