@@ -4,7 +4,7 @@ Neural Net Class
 from random import sample, seed
 from collections import deque
 import numpy as np
-from tensorflow.keras import Sequential
+from tensorflow.keras import Sequential, Input
 from tensorflow.keras.layers import Conv2D, Dense, Flatten
 from tensorflow.keras.optimizers import Adam
 from params import Params
@@ -16,13 +16,14 @@ class Neuralnet():
     """
     def __init__(self):
         self.params = Params()
+
         if self.params.seed:
             seed(self.params.seed)
 
-        self.state_size = (5, 5, self.params.state_features)
+        self.state_size = (self.params.vision_grid, self.params.vision_grid, self.params.state_features)
         self.optimizer = Adam(learning_rate=self.params.learning_rate)
 
-        self.experience_replay = deque(maxlen=2**16)
+        self.experience_replay = deque(maxlen=self.params.memory_size)
 
         self.batch_counter = 1
         self.align_counter = 1
@@ -45,9 +46,6 @@ class Neuralnet():
             if self.random_action:
                 print("End of random experiences")
             self.random_action = False
-#            return False
-#        else:
-#            return True
 
         return self.random_action
 
@@ -56,13 +54,19 @@ class Neuralnet():
         Compiles the model.
         """
         model = Sequential()
-        model.add(Conv2D(filters=16, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
-        model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
-        model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same'))
-        model.add(Flatten())
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(16, activation='relu'))
+
+        if self.params.convolutional:
+            model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
+            model.add(Flatten())
+            model.add(Dense(64, activation='relu'))
+            model.add(Dense(32, activation='relu'))
+            model.add(Dense(16, activation='relu'))
+        else:
+            model.add(Input(shape=self.state_size))
+            model.add(Flatten())
+            model.add(Dense(256, activation='relu'))
+            model.add(Dense(128, activation='relu'))
+
         model.add(Dense(self.params.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=self.optimizer)
         return model
@@ -92,12 +96,12 @@ class Neuralnet():
         """
         Train the neural net from a sample of the experience replay items.
         """
-        if self.align_counter % 3 == 0:
+        if self.align_counter % self.params.retrain_delay == 0:
             self.align_target()
 
         if len(self.experience_replay) >= self.params.batch_size:
             batch = sample(self.experience_replay, self.params.batch_size)
-            states = np.ndarray((self.params.batch_size, 5, 5, self.params.state_features))
+            states = np.ndarray((self.params.batch_size, self.params.vision_grid, self.params.vision_grid, self.params.state_features))
             for i in range(self.params.batch_size):
                 states[i] = batch[i][0]
             target = self.target_network.predict(states) # makes Q prediction for each action for all states in batch

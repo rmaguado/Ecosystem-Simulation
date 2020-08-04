@@ -1,4 +1,4 @@
-#!/usr/local/bin/python3
+#!/usr/bin/env python3
 """
 Ecosystem Simulator
 """
@@ -8,8 +8,8 @@ import sys
 import select
 import termios
 from pickle import load, dump
-from collections import deque
 import numpy
+import gzip
 from params import Params
 from environment import Environment
 from window import Window
@@ -22,15 +22,9 @@ class Controler():
     """
     def __init__(self):
         self.date_time = time.strftime("%Y.%m.%d-%H.%M.%S")
-        self.timestart = time.time()
 
         self.params = Params()
         self.environment = Environment()
-
-        if self.params.verbose:
-            line = "epoch   creatures   time    elapsed\n"
-            with open(f"out/log_epocs-{self.date_time}.txt", "w") as fname:
-                fname.write(line)
 
         if self.params.inherit_nn: # F
             self.inherit_nn = Neuralnet()
@@ -43,16 +37,17 @@ class Controler():
                 self.general_nn = self.inherit_nn
             else: # T
                 self.general_nn = Neuralnet()
+
             self.entities = Entities(environment=self.environment, general_nn=self.general_nn) # new NN
         else: # F
             self.general_nn = None
             self.entities = Entities(environment=self.environment, inherit_nn=self.inherit_nn)
 
-        self.epoch = 1
-        self.to_iterate = 0
-        self.logs = deque(maxlen=64)
+        if self.params.memory_load:
+            self.general_nn.experience_replay = self.load_memory(fname=f"out/stack-{self.date_time}.memory")
+            print("memory replay loaded")
 
-        self.running = True
+        self.epoch = 1
 
         if self.params.simulate:
             self.load_scenario()
@@ -62,18 +57,18 @@ class Controler():
             self.render()
 
         if self.params.interactive:
+            self.to_iterate = 0
+            self.running = True
             self.clear()
             self.idle()
         else:
             self.loop()
 
-        # save neural network
+        # save neural network & experience_replay
         if self.params.general_nn:
             self.save_weights(neural_net=self.general_nn, fname=f"out/weights-{self.date_time}.model")
-        # save experience_replay
-        f_save = open( f"out/stack-{self.date_time}.memory" , "wb")
-        dump(self.general_nn.experience_replay, f_save)
-        f_save.close()
+            self.save_memory(neural_net=self.general_nn, fname=f"out/stack-{self.date_time}.memory")
+
 
     def load_scenario(self):
         """
@@ -91,11 +86,29 @@ class Controler():
         for i in rnd.argsort():
             self.entities.spawn_creature(pos_x=pos_x[i], pos_y=pos_y[i], strength=strength[i])
 
+    def save_memory(self, neural_net, fname):
+        """
+        Dumps the experience_replay.
+        """
+        f_save = open(fname, "wb")
+        dump(neural_net.experience_replay, f_save)
+        f_save.close()
+
+    def load_memory(self, fname):
+        """
+        Retrieves saved experience_replay
+        """
+        f_name = gzip.open(fname, "rb")
+        memory = load(f_name)
+        f_name.close()
+
+        return memory
+
     def save_weights(self, neural_net, fname):
         """
         Pickles the weights of a nn.
         """
-        f_save = open(fname, "wb")
+        f_save = gzip.open(fname, "wb")
         weights = neural_net.q_network.get_weights()
         dump(weights, f_save)
         f_save.close()
@@ -133,23 +146,14 @@ class Controler():
         """
         Next Iteration
         """
-        self.environment.grow_grass(reset=self.params.simulate)
-
         if self.params.simulate:
             self.load_scenario()
 
-        # move creatures
-        iteration = self.entities.iterate()
+        self.environment.grow_grass(reset=self.params.simulate)
+        self.environment.epoch = self.epoch
 
-        # logs
-        self.logs.append(iteration)
-        if self.params.verbose:
-            now = time.strftime("%Y.%m.%d-%H.%M.%S")
-            elapsed = time.time() - self.timestart
-            self.timestart = time.time()
-            line = f"{self.epoch}\t{len(self.entities.creatures)}\t{now}\t{elapsed}\n"
-            with open(f"out/log_epocs-{self.date_time}.txt", "a") as fname:
-                fname.write(line)
+        # move creatures
+        self.entities.iterate()
 
         while len(self.entities.creatures) < self.params.min_n_creatures:
             self.entities.spawn_creature()  ## verify that general_nn is acting
@@ -174,28 +178,7 @@ class Controler():
         """
         self.clear()
         print('iter -i [indefinately] -c [counter] -s [stop]')
-        print('logs -g [get logs for one epoch | default last] -a [all logs]')
         print('exit')
-        print('')
-        print('Type enter to return to idle.')
-
-    def get_logs(self, args):
-        """
-        –
-        """
-        self.clear()
-        if len(args) > 1:
-            if args[1] == '-a':
-                for i in range(len(self.logs)):
-                    print(f'Epoch: {i+1}')
-                    for j in self.logs[i]:
-                        print(j)
-            elif args[1] == '-g':
-                print(f'Epoch: {self.epoch -1}')
-                for i in self.logs[-1]:
-                    print(i)
-        else:
-            pass
         print('')
         print('Type enter to return to idle.')
 
@@ -237,8 +220,6 @@ class Controler():
                         self.help()
                     elif args[0] == 'iter':
                         self.iterate(args)
-                    elif args[0] == 'logs':
-                        self.get_logs(args)
                     elif args[0] == 'exit':
                         self.clear()
                         self.running = False
@@ -250,7 +231,8 @@ class Controler():
 
             if self.to_iterate == -1:
                 self.next_epoch()
-                print(f"epoch: {self.epoch}")
+                if self.params.verbose:
+                    print(f"epoch: {self.epoch}")
             elif self.to_iterate > 0:
                 self.next_epoch()
                 self.to_iterate -= 1
@@ -265,10 +247,18 @@ class Controler():
         """
         Loops epochs 
         """
-        print(f"Running for {self.params.max_epochs} epochs")
+        if self.params.verbose:
+            print(f"Running for {self.params.max_epochs} epochs")
         for _ in range(self.params.max_epochs):
+            if self.params.window_show:
+                self.refresh()
+                time.sleep(0.01)
+                if self.window.quit_command:
+                    self.window.close_window()
+                    break
+
             self.next_epoch()
-            if self.epoch % 10 == 0:
+            if self.params.verbose and self.epoch % 10 == 0:
                 print(f"Epoch: {self.epoch}")
 
 
