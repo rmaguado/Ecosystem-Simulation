@@ -8,8 +8,8 @@ import sys
 import select
 import termios
 from pickle import load, dump
-import numpy
 import gzip
+import numpy
 from params import Params
 from environment import Environment
 from window import Window
@@ -44,7 +44,7 @@ class Controler():
             self.entities = Entities(environment=self.environment, inherit_nn=self.inherit_nn)
 
         if self.params.memory_load:
-            self.general_nn.experience_replay = self.load_memory(fname=f"out/stack-{self.date_time}.memory")
+            self.general_nn.experience_replay = self.load_memory(fname="out/"+self.params.memory_load)
             print("memory replay loaded")
 
         self.epoch = 1
@@ -90,7 +90,7 @@ class Controler():
         """
         Dumps the experience_replay.
         """
-        f_save = open(fname, "wb")
+        f_save = gzip.open(fname, "wb")
         dump(neural_net.experience_replay, f_save)
         f_save.close()
 

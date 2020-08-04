@@ -56,7 +56,8 @@ class Creature():
         if not self.strength:
             self.strength = uniform(0.01, 0.99)
         if not self.energy:
-            self.energy = self.get_reproductive_cost() / 2  # (strength * 100) + 5 : min 3 avg 27.5 max 52.5
+            self.energy = self.get_reproductive_cost() 
+                        # (strength * 100) + 5 : min 3 avg 27.5 max 52.5
 
     def inherit(self, parent, entity_grid, general_nn=None):
         """
@@ -67,7 +68,7 @@ class Creature():
         """
         spawn_x = [-1, 0, 1, 1, 1, 0, -1, -1]
         spawn_y = [1, 1, 1, 0, -1, -1, -1, 0]
-        pos = range(8)
+        pos = [0, 1, 2, 3, 4, 5, 6, 7]
         shuffle(pos) # permutes pos in place
         success = False
         for i in pos:
@@ -85,7 +86,7 @@ class Creature():
                 self.neural_net.inherit_network(parent.neural_net.q_network.get_weights())
             self.creature_id = self.value_shift(parent.creature_id)
             self.strength = self.value_shift(parent.strength)
-            self.energy = parent.get_reproductive_cost() / 2
+            self.energy = parent.get_reproductive_cost() * self.params.energy_reprod_transfer_rate
 
     #   return success
 

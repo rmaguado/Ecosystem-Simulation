@@ -56,7 +56,10 @@ class Neuralnet():
         model = Sequential()
 
         if self.params.convolutional:
-            model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
+            model.add(Conv2D(filters=4, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
+            model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
+            model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
+            model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same'))
             model.add(Flatten())
             model.add(Dense(64, activation='relu'))
             model.add(Dense(32, activation='relu'))
@@ -66,6 +69,7 @@ class Neuralnet():
             model.add(Flatten())
             model.add(Dense(256, activation='relu'))
             model.add(Dense(128, activation='relu'))
+            model.add(Dense(64, activation='relu'))
 
         model.add(Dense(self.params.action_size, activation='linear'))
         model.compile(loss='mse', optimizer=self.optimizer)
