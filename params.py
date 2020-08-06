@@ -39,26 +39,29 @@ class Params():
         self.energy_reprod_transfer_rate = 0.5
 
         # Q & NN
-        self.discount = 0.9
+        self.discount = 0.75
         self.general_nn = True
         self.inherit_nn = None # "weights-2020.07.31-12.41.36.model"
         self.batch_size = 512
         self.memory_size = 2**16 # 65536 experience replay
- 
+
         self.memory_load = None # "stack-2020.08.04-17.47.27.memory"
         self.training_size = 1024
- 
-        self.exploration_rate = 0.2
+
+        self.exploration_rate = 0.25
         self.learning_rate = 0.05
         self.retrain_delay = 3 # to update target NN
         self.convolutional = False
         self.max_epochs = 500
 
-        self.reward_DEATH = -10
-        self.reward_EVASION = -10
-        self.reward_SKIP = 0
-        self.reward_COMPETITOR = 0
-        self.reward_REPRODUCE = 20
+        self.reward_death = -10
+        self.reward_evasion = -10
+        self.reward_default = 0
+        self.reward_predation = 0
+        self.reward_repro = 20
 
     def reproductive_cost(self, strength):
+        """
+        Calculate reproductive cost proportional to creature strength.
+        """
         return strength * 100 + 5
