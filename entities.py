@@ -100,10 +100,12 @@ class Entities():
         """
         Returns input grid for a vision_grid of 5 x 5.
         """
-        state = np.ndarray((self.params.vision_grid, self.params.vision_grid, 4))
-        state[:, :, 0] = np.pad(self.environment.grass, ((2, 2), (2, 2)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid]
-        state[:, :, 1:] = np.pad(self.entity_grid, ((2, 2), (2, 2), (0, 0)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid, 1:]
-        state = state.reshape((1, self.params.vision_grid, self.params.vision_grid, 4))
+        state = np.ndarray((4, self.params.vision_grid, self.params.vision_grid))
+        state[0, :, :] = np.pad(self.environment.grass, ((2, 2), (2, 2)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid]
+        state[1, :, :] = np.pad(self.entity_grid, ((2, 2), (2, 2), (0, 0)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid, 1]
+        state[2, :, :] = np.pad(self.entity_grid, ((2, 2), (2, 2), (0, 0)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid, 2]
+        state[3, :, :] = np.pad(self.entity_grid, ((2, 2), (2, 2), (0, 0)), 'constant', constant_values=(1, 1))[var_x:var_x+self.params.vision_grid, var_y:var_y+self.params.vision_grid, 3]
+        state = state.reshape((1, 4, self.params.vision_grid, self.params.vision_grid))
 
         return state
 
@@ -113,7 +115,7 @@ class Entities():
         """
         state = self.get_state(creature.pos_x, creature.pos_y)
         for var_x, var_y in [[0, 1], [1, 0], [0, -1], [-1, 0]]:
-            competitor = self.get_creature(state[0][var_x + 2][var_y + 2][1])
+            competitor = self.get_creature(state[0][1][var_x + 2][var_y + 2])
             if competitor:
                 if competitor.strength > creature.strength and not creature.check_related(competitor):
                     return True
@@ -145,7 +147,7 @@ class Entities():
             q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size)
             action = randint(0, self.params.action_size-1)
         else:
-            q_table = creature.neural_net.q_network.predict(state) 
+            q_table = creature.neural_net.act(state)
             action = np.argmax(q_table)
         #reward
         reward = None
@@ -176,11 +178,11 @@ class Entities():
         else: # exhausetd energy
             self.erase_creature(creature)
             terminated = creature
-            reward = self.params.reward_DEATH
+            reward = self.params.reward_death
 
-        # reward creature based on moving away from danger 
+        # reward creature based on moving away from danger
         if self.check_death(creature):
-            reward = self.params.reward_EVASION
+            reward = self.params.reward_evasion
 
         # store in memory_replay and update random_policy
         self.random_policy = creature.store_experience(state, action, reward, future_state=self.get_state(creature.pos_x, creature.pos_y))
@@ -211,7 +213,7 @@ class Entities():
             if self.entity_grid[creature.pos_x + x_change][creature.pos_y + y_change][0] == 0:
                 creature.pos_x += x_change
                 creature.pos_y += y_change
-                reward = self.params.reward_SKIP
+                reward = self.params.reward_default
             # is not empty
             else:
                 # gets creature object for competing creature
@@ -223,20 +225,20 @@ class Entities():
                     creature.energy += competitor.energy * self.params.energy_eat_transfer_rate # ** halved
                     # check if creatures were related (anti-cannibalism rewarding)
                     if creature.check_related(competitor):
-                        reward = self.params.reward_DEATH
+                        reward = self.params.reward_death
                     else:
-                        reward = self.params.reward_COMPETITOR # * competitor.energy 
+                        reward = self.params.reward_predation # * competitor.energy
                     self.erase_creature(competitor)
                     terminated = competitor
                 # if competitor is stronger
                 else:
                     competitor.energy += creature.energy * self.params.energy_eat_transfer_rate
                     self.write_creature(competitor)
-                    reward = self.params.reward_DEATH
+                    reward = self.params.reward_death
                     terminated = creature
         # creature tries to move outside grid
         else:
-            reward = self.params.reward_SKIP
+            reward = self.params.reward_default
 
         return reward, terminated
 
@@ -249,7 +251,7 @@ class Entities():
         if self.environment.grass[creature.pos_x][creature.pos_y] == 1: # if green
             self.environment.grass[creature.pos_x][creature.pos_y] = 0  # eat all
             creature.energy += self.params.energy_eat
-        reward = self.params.reward_SKIP
+        reward = self.params.reward_default
 
         return reward, terminated
 
@@ -266,9 +268,9 @@ class Entities():
             creature.inherit(parent, entity_grid=self.entity_grid, general_nn=self.general_nn)
             self.creatures.append(creature)
             self.write_creature(creature)
-            reward = self.params.reward_REPRODUCE
+            reward = self.params.reward_repro
         else:
-            reward = self.params.reward_SKIP
+            reward = self.params.reward_default
 
         return reward, terminated
 
