@@ -1,119 +1,72 @@
 """
-Neural Net Class
+Network Class.
 """
-from random import sample, seed
-from collections import deque
+import torch as T
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
 import numpy as np
-from tensorflow.keras import Sequential, Input
-from tensorflow.keras.layers import Conv2D, Dense, Flatten
-from tensorflow.keras.optimizers import Adam
 from params import Params
 
-
-class Neuralnet():
+class DeepQNetwork(nn.Module):
     """
-    Neural Net Class
+    Neural Network Class.
     """
     def __init__(self):
+        super(DeepQNetwork, self).__init__()
+
         self.params = Params()
 
-        if self.params.seed:
-            seed(self.params.seed)
+        self.conv1 = nn.Conv2d(in_channels=self.params.state_features, out_channels=16, padding=1, kernel_size=3, stride=1)
+        self.conv2 = nn.Conv2d(in_channels=16, out_channels=4, padding=1, kernel_size=3, stride=1)
+        self.conv3 = nn.Conv2d(in_channels=4, out_channels=1, padding=1, kernel_size=3, stride=1)
 
-        self.state_size = (self.params.vision_grid, self.params.vision_grid, self.params.state_features)
-        self.optimizer = Adam(learning_rate=self.params.learning_rate)
+        fc_input_dims = self.calculate_conv_output_dims(input_dims=(4, 5, 5))
 
-        self.experience_replay = deque(maxlen=self.params.memory_size)
+        self.fc1 = nn.Linear(fc_input_dims, 512)
+        self.fc2 = nn.Linear(512, self.params.action_size)
 
-        self.batch_counter = 1
-        self.align_counter = 1
-        self.q_network = self.compile_model()
-        self.target_network = self.compile_model()
-        self.align_target()
-        self.random_action = True
+        self.optimizer = optim.RMSprop(self.parameters(), lr=self.params.learning_rate)
 
-    def store(self, state, action, reward, next_state):
+        self.loss = nn.MSELoss()
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.to(self.device)
+
+    def calculate_conv_output_dims(self, input_dims):
         """
-        Store rewards and states for experience replay.
+        Returns dimensions of convolutional output.
         """
-        self.experience_replay.append((state, action, reward, next_state))
-        if self.batch_counter % self.params.batch_size == 0:
-            self.retrain()
-        self.batch_counter += 1
+        state = T.zeros(1, *input_dims)
+        dims = self.conv1(state)
+        dims = self.conv2(dims)
+        dims = self.conv3(dims)
+        return int(np.prod(dims.size()))
 
-        # end of random
-        if self.batch_counter >= self.params.training_size:
-            if self.random_action:
-                print("End of random experiences")
-            self.random_action = False
-
-        return self.random_action
-
-    def compile_model(self):
+    def forward(self, state):
         """
-        Compiles the model.
+        Forward propagation.
         """
-        model = Sequential()
+        conv1 = F.relu(self.conv1(state))
+        conv2 = F.relu(self.conv2(conv1))
+        conv3 = F.relu(self.conv3(conv2))
+        # conv3 shape is BS x n_filters x H x W
+        conv_state = conv3.view(conv3.size()[0], -1)
+        # conv_state shape is BS x (n_filters * H * W)
+        flat1 = F.relu(self.fc1(conv_state))
+        actions = self.fc2(flat1)
 
-        if self.params.convolutional:
-            model.add(Conv2D(filters=4, kernel_size=3, strides=(1, 1), padding='same', input_shape=self.state_size))
-            model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
-            model.add(Conv2D(filters=8, kernel_size=3, strides=(1, 1), padding='same'))
-            model.add(Conv2D(filters=1, kernel_size=3, strides=(1, 1), padding='same'))
-            model.add(Flatten())
-            model.add(Dense(64, activation='relu'))
-            model.add(Dense(32, activation='relu'))
-            model.add(Dense(16, activation='relu'))
-        else:
-            model.add(Input(shape=self.state_size))
-            model.add(Flatten())
-            model.add(Dense(256, activation='relu'))
-            model.add(Dense(128, activation='relu'))
-            model.add(Dense(64, activation='relu'))
+        return actions
 
-        model.add(Dense(self.params.action_size, activation='linear'))
-        model.compile(loss='mse', optimizer=self.optimizer)
-        return model
+    def save_checkpoint(self, fname):
+        """
+        Saves weights.
+        """
+        print('... saving checkpoint ...')
+        T.save(self.state_dict(), fname)
 
-    def inherit_network(self, weights):
+    def load_checkpoint(self, fname):
         """
-        Copies the weights from another network
+        Loads the saved weights.
         """
-        self.q_network.set_weights(weights)
-        self.align_target()
-
-    def align_target(self):
-        """
-        Copies the weights from another network
-        """
-        self.target_network.set_weights(self.q_network.get_weights())
-
-    def act(self, state):
-        """
-        Produces a q table
-        #not used
-        """
-        q_values = self.q_network.predict(state)
-        return q_values
-
-    def retrain(self):
-        """
-        Train the neural net from a sample of the experience replay items.
-        """
-        if self.align_counter % self.params.retrain_delay == 0:
-            self.align_target()
-
-        if len(self.experience_replay) >= self.params.batch_size:
-            batch = sample(self.experience_replay, self.params.batch_size)
-            states = np.ndarray((self.params.batch_size, self.params.vision_grid, self.params.vision_grid, self.params.state_features))
-            for i in range(self.params.batch_size):
-                states[i] = batch[i][0]
-            target = self.target_network.predict(states) # makes Q prediction for each action for all states in batch
-            for i in range(self.params.batch_size):
-                action_b = batch[i][1]
-                reward_b = batch[i][2]
-                nextstate_b = batch[i][3]
-                target[i][action_b] = reward_b + self.params.discount * np.amax(self.target_network.predict(nextstate_b))
-            self.q_network.fit(states, target, epochs=1, verbose=0)
-
-        self.align_counter += 1
+        print('... loading checkpoint ...')
+        self.load_state_dict(T.load(fname))
