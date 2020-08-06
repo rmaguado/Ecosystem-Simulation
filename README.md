@@ -10,14 +10,9 @@ there are agents that interact with one another:
 
 i tried to make a launcher with a chmod shell script but had problems with different systems installing pygame in different locations (smh my head pygame)
 
-if mac_launcher.sh doesn't work for you:
-a) you might be on windows (could be)
-b) you are opening it with an editor instead of terminal
-c) pygame was installed elsewhere so just do python3 Controler.py on terminal or smth
-
 dependencies:
 
-- tensorflow2
+- torch
 - python3
-- pygame (duh)
+- pygame (for windowed option)
 - numpy
