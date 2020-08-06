@@ -14,7 +14,7 @@ from params import Params
 from environment import Environment
 from window import Window
 from entities import Entities
-from neuralnet import Neuralnet
+from agent import Agent
 
 class Controler():
     """
@@ -27,7 +27,7 @@ class Controler():
         self.environment = Environment()
 
         if self.params.inherit_nn: # F
-            self.inherit_nn = Neuralnet()
+            self.inherit_nn = Agent()
             self.inherit_nn.inherit_network(self.load_weights(self.params.inherit_nn))
         else:
             self.inherit_nn = None # T
@@ -36,7 +36,7 @@ class Controler():
             if self.params.inherit_nn:  # F
                 self.general_nn = self.inherit_nn
             else: # T
-                self.general_nn = Neuralnet()
+                self.general_nn = Agent()
 
             self.entities = Entities(environment=self.environment, general_nn=self.general_nn) # new NN
         else: # F
@@ -109,7 +109,7 @@ class Controler():
         Pickles the weights of a nn.
         """
         f_save = gzip.open(fname, "wb")
-        weights = neural_net.q_network.get_weights()
+        weights = neural_net.get_weights()
         dump(weights, f_save)
         f_save.close()
 
@@ -160,7 +160,7 @@ class Controler():
 
         if self.params.window_show:
             self.render()
-        
+
         self.epoch += 1
 
     def console(self):
@@ -245,7 +245,7 @@ class Controler():
 
     def loop(self):
         """
-        Loops epochs 
+        Loops epochs.
         """
         if self.params.verbose:
             print(f"Running for {self.params.max_epochs} epochs")
