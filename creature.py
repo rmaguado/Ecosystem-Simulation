@@ -3,7 +3,7 @@ Creature Class
 """
 from random import randint, uniform, shuffle, seed
 from params import Params
-from neuralnet import Neuralnet
+from agent import Agent
 
 class Creature():
     """
@@ -38,10 +38,10 @@ class Creature():
         if not self.neural_net:
             # if inhering a neural network, copies its weights
             if self.inherit_nn:
-                self.neural_net.inherit_network(self.inherit_nn.q_network.get_weights())
+                self.neural_net.inherit_network(self.inherit_nn.get_weights())
             # otherwise create a new network
             else:
-                self.neural_net = Neuralnet()
+                self.neural_net = Agent()
         # searches for an empty spot to spawn in
         if not self.pos_x and not self.pos_y:
             empty = False
@@ -56,7 +56,7 @@ class Creature():
         if not self.strength:
             self.strength = uniform(0.01, 0.99)
         if not self.energy:
-            self.energy = self.get_reproductive_cost() 
+            self.energy = self.get_reproductive_cost()
                         # (strength * 100) + 5 : min 3 avg 27.5 max 52.5
 
     def inherit(self, parent, entity_grid, general_nn=None):
@@ -82,8 +82,8 @@ class Creature():
             if general_nn:  # interit NN
                 self.neural_net = general_nn
             else:
-                self.neural_net = Neuralnet()
-                self.neural_net.inherit_network(parent.neural_net.q_network.get_weights())
+                self.neural_net = Agent()
+                self.neural_net.inherit_network(parent.neural_net.get_weights())
             self.creature_id = self.value_shift(parent.creature_id)
             self.strength = self.value_shift(parent.strength)
             self.energy = parent.get_reproductive_cost() * self.params.energy_reprod_transfer_rate
