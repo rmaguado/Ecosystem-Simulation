@@ -41,9 +41,9 @@ class Agent():
         self.batch_counter += 1
 
         # end of random
-        if self.batch_counter >= self.params.training_size:
+        if self.batch_counter >= self.params.training_random:
             if self.random_action:
-                print("End of random experiences")
+                print(f"End of {self.params.training_random} initial random experiences")
             self.random_action = False
 
         return self.random_action
@@ -82,23 +82,23 @@ class Agent():
         """
         batch = sample(self.experience_replay, self.params.batch_size)
 
-        states = np.ndarray((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
-        actions = np.ndarray(self.params.batch_size)
-        future_states = np.ndarray((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
-        rewards = np.ndarray(self.params.batch_size)
+        states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
+        actions = np.zeros(self.params.batch_size)
+        rewards = np.zeros(self.params.batch_size)
+        future_states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
 
         for i in range(self.params.batch_size):
             states[i] = batch[i][0]
             actions[i] = batch[i][1]
-            future_states[i] = batch[i][3]
             rewards[i] = batch[i][2]
+            future_states[i] = batch[i][3]
 
         states = T.tensor(states, dtype=T.float32).to(self.q_eval.device)
         actions = T.tensor(actions, dtype=T.int64).to(self.q_eval.device)
-        future_states = T.tensor(future_states, dtype=T.float32).to(self.q_eval.device)
         rewards = T.tensor(rewards, dtype=T.float32).to(self.q_eval.device)
+        future_states = T.tensor(future_states, dtype=T.float32).to(self.q_eval.device)
 
-        return states, actions, future_states, rewards
+        return states, actions, rewards, future_states
 
     def retrain(self):
         """
@@ -110,7 +110,7 @@ class Agent():
         if len(self.experience_replay) >= self.params.batch_size:
             self.q_eval.optimizer.zero_grad()
 
-            states, actions, future_states, rewards = self.sample_memory()
+            states, actions, rewards, future_states = self.sample_memory()
             indices = np.arange(self.params.batch_size)
 
             q_pred = self.q_eval.forward(states)[indices, actions]

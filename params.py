@@ -39,26 +39,26 @@ class Params():
         self.energy_reprod_transfer_rate = 0.5
 
         # Q & NN
-        self.discount = 0.75
+        self.discount = 0.95
         self.general_nn = True
         self.inherit_nn = None # "weights-2020.07.31-12.41.36.model"
         self.batch_size = 512
         self.memory_size = 2**16 # 65536 experience replay
 
         self.memory_load = None # "stack-2020.08.04-17.47.27.memory"
-        self.training_size = 1024
+        self.training_random = 65536
 
-        self.exploration_rate = 0.25
+        self.exploration_rate = 0.20
         self.learning_rate = 0.05
-        self.retrain_delay = 3 # to update target NN
-        self.convolutional = False
-        self.max_epochs = 10000
+        self.retrain_delay = 1 # to update target NN min 1
+        self.convolutional = True
+        self.max_epochs = 50000
 
         self.reward_death = -10
         self.reward_evasion = -10
         self.reward_default = 0
         self.reward_predation = 0
-        self.reward_repro = 20
+        self.reward_repro = 10
 
     def reproductive_cost(self, strength):
         """

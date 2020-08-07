@@ -36,7 +36,7 @@ class Controler():
             if self.params.inherit_nn:  # F
                 self.general_nn = self.inherit_nn
             else: # T
-                self.general_nn = Agent()
+                self.general_nn = Agent()   # first network
 
             self.entities = Entities(environment=self.environment, general_nn=self.general_nn) # new NN
         else: # F

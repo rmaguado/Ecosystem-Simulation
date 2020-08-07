@@ -73,7 +73,9 @@ class Creature():
         success = False
         for i in pos:
             # find random empty spot next to parent
-            if (parent.pos_x + spawn_x[i] >= 0 and parent.pos_x + spawn_x[i] < self.params.grid_size and parent.pos_y + spawn_y[i] >= 0 and parent.pos_y + spawn_y[i] < self.params.grid_size and entity_grid[parent.pos_x + spawn_x[i]][parent.pos_y + spawn_y[i]][0] == 0):
+            if (parent.pos_x + spawn_x[i] >= 0 and parent.pos_x + spawn_x[i] < self.params.grid_size and 
+                parent.pos_y + spawn_y[i] >= 0 and parent.pos_y + spawn_y[i] < self.params.grid_size and 
+                entity_grid[parent.pos_x + spawn_x[i]][parent.pos_y + spawn_y[i]][0] == 0):
                 self.pos_x = parent.pos_x + spawn_x[i]
                 self.pos_y = parent.pos_y + spawn_y[i]
                 success = True
@@ -88,14 +90,14 @@ class Creature():
             self.strength = self.value_shift(parent.strength)
             self.energy = parent.get_reproductive_cost() * self.params.energy_reprod_transfer_rate
 
-    #   return success
+        return success # may be no space to spawn !
 
     def value_shift(self, value):
         """
         Slightly modifies a value.
         """
         new_value = 1
-        while new_value >= 1:
+        while new_value >= 1: # wwant < 1
             new_value = value * uniform(1-self.params.relatedness, 1+self.params.relatedness)
 
         return new_value
