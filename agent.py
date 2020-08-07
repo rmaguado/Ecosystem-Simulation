@@ -5,7 +5,7 @@ from random import sample, seed
 from collections import deque
 import numpy as np
 import torch as T
-from network import DeepQNetwork
+from neuralnet import DeepQNetwork
 from params import Params
 
 class Agent():
@@ -68,7 +68,13 @@ class Agent():
         """
         Produces a q table
         """
-        return self.q_eval.forward(state)
+        state = T.tensor(state, dtype=T.float32).to(self.q_eval.device)
+        q_table = self.q_eval.forward(state)
+
+        action = T.argmax(q_table).item()   # .item() removes tensor()
+        qval = T.max(q_table).item()
+
+        return action, qval
 
     def sample_memory(self):
         """
@@ -84,13 +90,13 @@ class Agent():
         for i in range(self.params.batch_size):
             states[i] = batch[i][0]
             actions[i] = batch[i][1]
-            rewards[i] = batch[i][2]
             future_states[i] = batch[i][3]
+            rewards[i] = batch[i][2]
 
-        states = T.tensor(states).to(self.q_eval.device)
-        actions = T.tensor(actions).to(self.q_eval.device)
-        future_states = T.tensor(future_states).to(self.q_eval.device)
-        rewards = T.tensor(rewards).to(self.q_eval.device)
+        states = T.tensor(states, dtype=T.float32).to(self.q_eval.device)
+        actions = T.tensor(actions, dtype=T.int64).to(self.q_eval.device)
+        future_states = T.tensor(future_states, dtype=T.float32).to(self.q_eval.device)
+        rewards = T.tensor(rewards, dtype=T.float32).to(self.q_eval.device)
 
         return states, actions, future_states, rewards
 

@@ -21,7 +21,7 @@ class DeepQNetwork(nn.Module):
         self.conv2 = nn.Conv2d(in_channels=16, out_channels=4, padding=1, kernel_size=3, stride=1)
         self.conv3 = nn.Conv2d(in_channels=4, out_channels=1, padding=1, kernel_size=3, stride=1)
 
-        fc_input_dims = self.calculate_conv_output_dims(input_dims=(4, 5, 5))
+        fc_input_dims = self.calculate_conv_output_dims(input_dims=(self.params.state_features, self.params.vision_grid, self.params.vision_grid))
 
         self.fc1 = nn.Linear(fc_input_dims, 512)
         self.fc2 = nn.Linear(512, self.params.action_size)

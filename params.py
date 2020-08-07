@@ -52,7 +52,7 @@ class Params():
         self.learning_rate = 0.05
         self.retrain_delay = 3 # to update target NN
         self.convolutional = False
-        self.max_epochs = 500
+        self.max_epochs = 10000
 
         self.reward_death = -10
         self.reward_evasion = -10
