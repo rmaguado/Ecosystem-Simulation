@@ -39,7 +39,7 @@ class Params():
         self.energy_reprod_transfer_rate = 0.5
 
         # Q & NN
-        self.discount = 0.95
+        self.discount = 0.99
         self.general_nn = True
         self.inherit_nn = None # "weights-2020.07.31-12.41.36.model"
         self.batch_size = 512
@@ -49,10 +49,10 @@ class Params():
         self.training_random = 65536
 
         self.exploration_rate = 0.20
-        self.learning_rate = 0.05
-        self.retrain_delay = 1 # to update target NN min 1
-        self.convolutional = True
-        self.max_epochs = 50000
+        self.learning_rate = 0.01
+        self.retrain_delay = 2 # to update target NN min 1
+        self.convolutional = False
+        self.max_epochs = 10000
 
         self.reward_death = -10
         self.reward_evasion = -10
