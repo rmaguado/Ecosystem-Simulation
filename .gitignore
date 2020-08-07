@@ -1,3 +1,6 @@
 __pycache__
-out
+out/*.tsv
+out/*.memory
+out/*.model
+
 
