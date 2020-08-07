@@ -48,34 +48,6 @@ class Agent():
 
         return self.random_action
 
-    def get_weights(self):
-        return self.q_eval.state_dict()
-
-    def inherit_network(self, weights):
-        """
-        Copies the weights from another network
-        """
-        self.q_eval.load_checkpoint(weights)
-        self.align_target()
-
-    def align_target(self):
-        """
-        Copies the weights from another network
-        """
-        self.q_next.load_state_dict(self.q_eval.state_dict())
-
-    def act(self, state):
-        """
-        Produces a q table
-        """
-        state = T.tensor(state, dtype=T.float32).to(self.q_eval.device)
-        q_table = self.q_eval.forward(state)
-
-        action = T.argmax(q_table).item()   # .item() removes tensor()
-        qval = T.max(q_table).item()
-
-        return action, qval
-
     def sample_memory(self):
         """
         Returns random sample of experience replay.
@@ -100,6 +72,17 @@ class Agent():
 
         return states, actions, rewards, future_states
 
+    def act(self, state):
+        """
+        Generates the q table and the derived action
+        """
+        state = T.tensor(state, dtype=T.float32).to(self.q_eval.device)
+        q_table = self.q_eval.forward(state)
+
+        action = T.argmax(q_table).item()        # .item() removes tensor()
+        q_table = q_table.detach().cpu().numpy() # tensor > numpy : need to move to cpu and detach
+        return action, q_table
+
     def retrain(self):
         """
         Train the neural net from a sample of the experience replay items.
@@ -123,3 +106,54 @@ class Agent():
             self.q_eval.optimizer.step()
 
         self.align_counter += 1
+
+    # netwok 
+
+    def get_weights(self):
+        return self.q_eval.state_dict()
+
+    def inherit_network(self, weights):
+        """
+        Copies the weights from another network
+        """
+        self.q_eval.load_state_dict(weights)
+        self.align_target()
+
+    def align_target(self):
+        """
+        Copies the weights from another network
+        """
+        self.q_next.load_state_dict(self.q_eval.state_dict())
+
+    def save_network(self, fname):
+        """
+        Saves weights.
+        """
+        print('... saving checkpoint ...')
+        T.save(self.q_eval.state_dict(), fname)
+
+    def load_network(self, fname):
+        """
+        Loads the saved weights.
+        """
+        print('... loading checkpoint ...')
+        self.q_eval.load_state_dict(T.load(fname))
+
+    # memory: experience replay
+
+    def save_memory(self, fname):
+        """
+        Dumps the experience_replay.
+        """
+        f_save = gzip.open(fname, "wb")
+        dump(self.experience_replay, f_save)
+        f_save.close()
+
+    def load_memory(self, fname):
+        """
+        Retrieves saved experience_replay
+        """
+        f_name = gzip.open(fname, "rb")
+        self.experience_replay = load(f_name)
+        f_name.close()
+

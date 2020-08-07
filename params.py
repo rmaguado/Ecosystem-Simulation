@@ -50,9 +50,9 @@ class Params():
 
         self.exploration_rate = 0.20
         self.learning_rate = 0.01
-        self.retrain_delay = 2 # to update target NN min 1
+        self.retrain_delay = 3 # to update target NN min 1
         self.convolutional = False
-        self.max_epochs = 10000
+        self.max_epochs = 50000
 
         self.reward_death = -10
         self.reward_evasion = -10
@@ -64,4 +64,4 @@ class Params():
         """
         Calculate reproductive cost proportional to creature strength.
         """
-        return strength * 100 + 5
+        return strength * 50 + 5

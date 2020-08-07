@@ -34,7 +34,7 @@ class Entities():
             self.timestart = time.time()
             self.actions = ['left ', 'up   ', 'right', 'down ', 'eat  ', 'repro']
             # logs header
-            line = "epoch\tsecs\trandom\tcreatures\tcreature\tstrength\tenergy\tpos_x\tpos_y\taction\treward\tq_val\n"
+            line = "epoch\tsecs\trandom\tcreatures\tcreature\tstrength\tenergy\tpos_x\tpos_y\taction\treward\tleft\tup\tright\tdown\teat\trepro\n"
             with open(f"out/log_out-{self.date_time}.tsv", "w") as fname:
                 fname.write(line)
 
@@ -145,10 +145,9 @@ class Entities():
         # action
         if np.random.rand() < self.params.exploration_rate or self.random_policy:
             action = randint(0, self.params.action_size-1)
-            qval = '.'
+            q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size)
         else:
-            action, qval = creature.neural_net.act(state)
-            qval = f"{qval:8.5f}"
+            action, q_table = creature.neural_net.act(state)
         #reward
         reward = None
         terminated = None
@@ -191,7 +190,7 @@ class Entities():
         if self.params.verbose:
             elapsed = time.time() - self.timestart
             self.timestart = time.time()
-            line = f"{self.environment.epoch:>6}\t{elapsed:8.5f}\t{str(self.random_policy)[0:1]}\t{len(self.creatures):>3}\t{creature.creature_id:12.10f}\t{creature.strength:8.5f}\t{creature.energy:6.2f}\t{creature.pos_x:5}\t{creature.pos_y:5}\t{self.actions[action]}\t{reward:>4}\t{qval}\n" # + np.array2string(q_table, formatter={'float_kind':lambda x: "%#8.4f" % x}, separator="\t")[2:-2] + "\n"
+            line = f"{self.environment.epoch:>6}\t{elapsed:8.5f}\t{str(self.random_policy)[0:1]}\t{len(self.creatures):>3}\t{creature.creature_id:12.10f}\t{creature.strength:8.5f}\t{creature.energy:6.2f}\t{creature.pos_x:5}\t{creature.pos_y:5}\t{self.actions[action]}\t{reward:>4}\t" + np.array2string(q_table, formatter={'float_kind':lambda x: "%#8.1f" % x}, separator="\t")[2:-2] + "\n"
             with open(f"out/log_out-{self.date_time}.tsv", "a") as fname:
                 fname.write(line)
 

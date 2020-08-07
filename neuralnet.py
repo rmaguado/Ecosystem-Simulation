@@ -64,16 +64,3 @@ class DeepQNetwork(nn.Module):
 
         return actions
 
-    def save_checkpoint(self, fname):
-        """
-        Saves weights.
-        """
-        print('... saving checkpoint ...')
-        T.save(self.state_dict(), fname)
-
-    def load_checkpoint(self, fname):
-        """
-        Loads the saved weights.
-        """
-        print('... loading checkpoint ...')
-        self.load_state_dict(T.load(fname))

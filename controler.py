@@ -16,6 +16,7 @@ from window import Window
 from entities import Entities
 from agent import Agent
 
+
 class Controler():
     """
     Controler class
@@ -28,7 +29,7 @@ class Controler():
 
         if self.params.inherit_nn: # F
             self.inherit_nn = Agent()
-            self.inherit_nn.inherit_network(self.load_weights(self.params.inherit_nn))
+            self.inherit_nn.load_network(fname=self.params.inherit_nn)
         else:
             self.inherit_nn = None # T
 
@@ -44,7 +45,7 @@ class Controler():
             self.entities = Entities(environment=self.environment, inherit_nn=self.inherit_nn)
 
         if self.params.memory_load:
-            self.general_nn.experience_replay = self.load_memory(fname="out/"+self.params.memory_load)
+            self.general_nn.load_memory(fname="out/"+self.params.memory_load)
             print("memory replay loaded")
 
         self.epoch = 1
@@ -66,8 +67,8 @@ class Controler():
 
         # save neural network & experience_replay
         if self.params.general_nn:
-            self.save_weights(neural_net=self.general_nn, fname=f"out/weights-{self.date_time}.model")
-            self.save_memory(neural_net=self.general_nn, fname=f"out/stack-{self.date_time}.memory")
+            self.general_nn.save_network(fname=f"out/weights-{self.date_time}.model")
+            self.general_nn.save_memory(fname=f"out/stack-{self.date_time}.memory")
 
 
     def load_scenario(self):
@@ -85,43 +86,6 @@ class Controler():
 
         for i in rnd.argsort():
             self.entities.spawn_creature(pos_x=pos_x[i], pos_y=pos_y[i], strength=strength[i])
-
-    def save_memory(self, neural_net, fname):
-        """
-        Dumps the experience_replay.
-        """
-        f_save = gzip.open(fname, "wb")
-        dump(neural_net.experience_replay, f_save)
-        f_save.close()
-
-    def load_memory(self, fname):
-        """
-        Retrieves saved experience_replay
-        """
-        f_name = gzip.open(fname, "rb")
-        memory = load(f_name)
-        f_name.close()
-
-        return memory
-
-    def save_weights(self, neural_net, fname):
-        """
-        Pickles the weights of a nn.
-        """
-        f_save = gzip.open(fname, "wb")
-        weights = neural_net.get_weights()
-        dump(weights, f_save)
-        f_save.close()
-
-    def load_weights(self, fname):
-        """
-        Opens file with saved model to retreive weights
-        """
-        f_name = open(fname, "rb")
-        weights = load(f_name)
-        f_name.close()
-
-        return weights
 
     def clear(self):
         """
