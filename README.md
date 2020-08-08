@@ -1,7 +1,8 @@
 # Ecosystem-Simulation
+
 how it works:
 
-there are agents that interact with one another: 
+there are agents that interact with one another:
 
 - the environment aka the grass
 - a q-learning style neural network class
