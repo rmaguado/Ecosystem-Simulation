@@ -5,6 +5,7 @@ from random import randint, seed
 import numpy as np
 from params import Params
 from creature import Creature
+from logs import Logs
 
 class Entities():
     """
