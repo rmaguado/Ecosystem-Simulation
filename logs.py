@@ -39,7 +39,7 @@ def log_header(self):
 def log_iteration(self, epoch, random_policy, creatures, creature, action, reward, q_table):
     elapsed = time.time() - self.timestart
     self.timestart = time.time()
-    line = f"{epoch:>6}\t{elapsed:8.5f}\t{str(random_policy)[0:1]}\t{len(creatures):>3}\t{creature.creature_id:12.10f}\t{creature.strength:8.5f}\t{creature.energy:6.2f}\t{creature.pos_x:5}\t{creature.pos_y:5}\t{self.actions[action]}\t{reward:>4}\t" + np.array2string(q_table, formatter={'float_kind':lambda x: "%#8.1f" % x}, separator="\t")[2:-2] + "\n"
+    line = f"{epoch:>6}\t{elapsed:8.5f}\t{str(random_policy)[0:1]}\t{len(creatures):>3}\t{creature.creature_id:12.10f}\t{creature.strength:8.5f}\t{creature.energy:6.2f}\t{creature.pos_x:5}\t{creature.pos_y:5}\t{self.actions[action]}\t{reward:>4}\t" + np.array2string(q_table, formatter={'float_kind':lambda x: "%#8.1f" % x}, separator="\t", max_line_width=200)[2:-2] + "\n"
     with open(self.logs_fname, "a") as fname:
         fname.write(line)
 
