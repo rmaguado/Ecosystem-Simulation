@@ -26,6 +26,8 @@ class Entities():
         self.general_nn = general_nn
         self.inherit_nn = inherit_nn
 
+        self.exploration_rate = self.params.exploration_rate
+
         for _ in range(self.params.starting_creatures):
             self.spawn_creature()
 
@@ -33,6 +35,7 @@ class Entities():
             self.logs = Logs(self.environment)
             self.logs.log_run()
             self.logs.log_header()
+            self.batch_counter = self.general_nn.align_counter  # starts 1
 
     def write_creature(self, creature):
         """
@@ -120,6 +123,14 @@ class Entities():
         for i in terminated:
             self.delete_creature(i)
 
+        # log loss
+        if self.params.verbose:
+            if self.batch_counter < self.general_nn.align_counter:
+                # network updated
+                self.logs.log_loss(self.general_nn.agent_hash, self.batch_counter, self.general_nn.loss)
+                self.batch_counter = self.general_nn.align_counter
+
+
     def action(self, creature):
         """
         Get an action from the Neural Net,
@@ -134,6 +145,12 @@ class Entities():
             q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size)
         else:
             action, q_table = creature.neural_net.act(state)
+
+        # decrease exploration rate up to min
+        self.exploration_rate -= self.params.exploration_rate_dec
+        if self.exploration_rate < self.params.exploration_rate_min:
+            self.exploration_rate = self.params.exploration_rate_min
+
         #reward
         reward = None
         terminated = None

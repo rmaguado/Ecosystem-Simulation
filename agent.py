@@ -1,7 +1,7 @@
 """
 Agent Class.
 """
-from random import sample, seed
+from random import sample, randint, seed
 from collections import deque
 from pickle import load, dump
 import gzip
@@ -25,25 +25,27 @@ class Agent():
 
         self.experience_replay = deque(maxlen=self.params.memory_size)
 
-        self.batch_counter = 1
+        self.run_counter = 1
         self.align_counter = 1
         self.q_eval = DeepQNetwork()
         self.q_next = DeepQNetwork()
 
         self.align_target()
         self.random_action = True
+        self.loss = 0
+        self.agent_hash = randint(1, 10000000)
 
     def store(self, state, action, reward, next_state):
         """
         Store rewards and states for experience replay.
         """
         self.experience_replay.append((state, action, reward, next_state))
-        if self.batch_counter % self.params.batch_size == 0:
-            self.retrain()
-        self.batch_counter += 1
+        if self.run_counter % self.params.batch_size == 0:
+            self.loss = self.retrain()
+        self.run_counter += 1
 
         # end of random
-        if self.batch_counter >= self.params.training_random:
+        if self.run_counter >= self.params.training_random:
             if self.random_action:
                 print(f"End of {self.params.training_random} initial random experiences")
             self.random_action = False
@@ -93,7 +95,6 @@ class Agent():
             self.align_target()
 
         if len(self.experience_replay) >= self.params.batch_size:
-            self.q_eval.optimizer.zero_grad()
 
             states, actions, rewards, future_states = self.sample_memory()
             indices = np.arange(self.params.batch_size)
@@ -104,10 +105,14 @@ class Agent():
             q_target = rewards + self.params.discount * q_next
 
             loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)
+
+            self.q_eval.optimizer.zero_grad()
             loss.backward()
             self.q_eval.optimizer.step()
 
         self.align_counter += 1
+
+        return loss.item()
 
     # netwok
 

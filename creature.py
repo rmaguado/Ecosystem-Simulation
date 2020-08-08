@@ -73,9 +73,9 @@ class Creature():
         success = False
         for i in pos:
             # find random empty spot next to parent
-            if (parent.pos_x + spawn_x[i] >= 0 and parent.pos_x + spawn_x[i] < self.params.grid_size and 
-                parent.pos_y + spawn_y[i] >= 0 and parent.pos_y + spawn_y[i] < self.params.grid_size and 
-                entity_grid[parent.pos_x + spawn_x[i]][parent.pos_y + spawn_y[i]][0] == 0):
+            if (parent.pos_x + spawn_x[i] >= 0 and parent.pos_x + spawn_x[i] < self.params.grid_size and
+                    parent.pos_y + spawn_y[i] >= 0 and parent.pos_y + spawn_y[i] < self.params.grid_size and
+                    entity_grid[parent.pos_x + spawn_x[i]][parent.pos_y + spawn_y[i]][0] == 0):
                 self.pos_x = parent.pos_x + spawn_x[i]
                 self.pos_y = parent.pos_y + spawn_y[i]
                 success = True

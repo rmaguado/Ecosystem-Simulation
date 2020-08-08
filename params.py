@@ -46,9 +46,12 @@ class Params():
         self.memory_size = 2**16 # 65536 experience replay
 
         self.memory_load = None # "stack-2020.08.04-17.47.27.memory"
-        self.training_random = 65536
+        self.training_random = 2**16
 
-        self.exploration_rate = 0.20
+        self.exploration_rate = 0.25
+        self.exploration_rate_min = 0.05
+        self.exploration_rate_dec = 2e-5 # = 0.2 / 10000
+
         self.learning_rate = 0.01
         self.retrain_delay = 3 # to update target NN min 1
         self.convolutional = False
@@ -64,4 +67,4 @@ class Params():
         """
         Calculate reproductive cost proportional to creature strength.
         """
-        return strength * 50 + 5
+        return strength * 40 + 5
