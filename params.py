@@ -19,7 +19,7 @@ class Params():
         self.verbose = True
         self.simulate = False
         self.seed = None # 131
-        
+
         self.cuda = "cuda:1"
 
         # environment
@@ -43,9 +43,9 @@ class Params():
         # Q & NN
         self.discount = 0.95
         self.general_nn = True
-        
+
         self.inherit_nn = None # "weights-2020.   .model"
-        
+
         self.batch_size = 512
 
         self.memory_size = 2**16 # 65536 experience replay
