@@ -57,17 +57,17 @@ class Logs():
         """
         log loss
         """
-        line = "agent\tbatch\tloss\n"
+        line = "agent\tbatch\tcreatures\texploration\tloss\n"
         with open(self.loss_fname, "w") as fname:
             fname.write(line)
 
-    def log_loss(self, agent, batch, loss):
+    def log_loss(self, agent, batch, creatures, exploration, loss):
         """
         log run parameters
         """
         if batch == 1:
             self.log_loss_header()
 
-        line = f"{agent:>8}\t{batch:>6}\t{loss:12.2f}\n"
+        line = f"{agent:>8}\t{batch:>6}\t{creatures:>8}\t{exploration:7.5f}\t{loss:12.2f}\n"
         with open(self.loss_fname, "a") as fname:
             fname.write(line)

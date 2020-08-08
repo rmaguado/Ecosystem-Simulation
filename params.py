@@ -50,7 +50,7 @@ class Params():
 
         self.exploration_rate = 0.25
         self.exploration_rate_min = 0.05
-        self.exploration_rate_dec = 2e-5 # = 0.2 / 10000
+        self.exploration_rate_dec = 0.000001 # = 0.2 / 200000
 
         self.learning_rate = 0.01
         self.retrain_delay = 3 # to update target NN min 1

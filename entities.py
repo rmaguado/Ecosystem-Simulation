@@ -127,7 +127,7 @@ class Entities():
         if self.params.verbose:
             if self.batch_counter < self.general_nn.align_counter:
                 # network updated
-                self.logs.log_loss(self.general_nn.agent_hash, self.batch_counter, self.general_nn.loss)
+                self.logs.log_loss(self.general_nn.agent_hash, self.batch_counter, self.general_nn.run_counter, self.exploration_rate, self.general_nn.loss)
                 self.batch_counter = self.general_nn.align_counter
 
 
