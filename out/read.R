@@ -1,15 +1,33 @@
-l<-as.data.frame(fread("log_out-2020.08.07-18.40.39.tsv", na.strings = ".", fill=T))
+#!/usr/bin/env Rscript
+args = commandArgs(trailingOnly=TRUE)
+
+l<-as.data.frame(data.table::fread(args[1], na.strings = ".", fill=T))
+
+options(width=150)
+
+cat("\nAll\n\n")
 
 summary(l)
-Table(is.na(l$q_val)) # ~ 25%
-
-summary(l$q_val)
-
+Table(l$repro == 0)
+Table(l$creatures)
 Table(l$action)
 Table(l$action, l$reward)
 
-Table(l$action[!l$random], l$reward[!l$random])
 
-Table(l$action[500000:NROW(l)], l$reward[500000:NROW(l)])
+cat("\nLast 25%\n\n")
+l<-l[ round(NROW(l)*.75):NROW(l),]
 
-Table(l$action[1:NROW(l)>500000 & !is.na(l$q_val)], l$reward[1:NROW(l)>500000 & !is.na(l$q_val)])
+summary(l)
+Table(l$repro == 0)
+Table(l$creatures)
+Table(l$action)
+Table(l$action, l$reward)
+
+cat("\nLast 25% no random\n\n")
+l<-l[ l$repro!=0,]
+
+summary(l)
+Table(l$creatures)
+Table(l$action)
+Table(l$action, l$reward)
+
