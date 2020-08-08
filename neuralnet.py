@@ -17,6 +17,8 @@ class DeepQNetwork(nn.Module):
 
         self.params = Params()
 
+        self.device = T.device(self.params.cuda if T.cuda.is_available() else 'cpu')
+
         if self.params.convolutional:
             self.conv1 = nn.Conv2d(in_channels=self.params.state_features, out_channels=16, padding=1, kernel_size=3, stride=1)
             self.conv2 = nn.Conv2d(in_channels=16, out_channels=4, padding=1, kernel_size=3, stride=1)
@@ -33,7 +35,7 @@ class DeepQNetwork(nn.Module):
         self.optimizer = optim.RMSprop(self.parameters(), lr=self.params.learning_rate)
 
         self.loss = nn.MSELoss()
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        
         self.to(self.device)
 
     def calculate_conv_output_dims(self, input_dims):

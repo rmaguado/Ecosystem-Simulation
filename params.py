@@ -19,6 +19,8 @@ class Params():
         self.verbose = True
         self.simulate = False
         self.seed = None # 131
+        
+        self.cuda = "cuda:1"
 
         # environment
         self.grid_size = 20
@@ -58,7 +60,7 @@ class Params():
 
         self.learning_rate = 0.01
         self.retrain_delay = 10
-        self.convolutional = False
+        self.convolutional = True
 
         self.reward_death = -10
         self.reward_evasion = -10

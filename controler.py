@@ -221,7 +221,7 @@ class Controler():
                     break
 
             self.next_epoch()
-            if self.params.verbose and self.epoch % 100 == 0:
+            if self.params.verbose and self.epoch % 1000 == 0:
                 print(f"Epoch: {self.epoch}")
 
 
