@@ -26,7 +26,7 @@ class Logs():
         """
         log run parameters
         """
-        header = "Parameters:\n\n"
+        header = "Parameters:\t\n\n\t\n"
         with open(self.run_fname, "w") as fname:
             fname.write(header)
         for i in dir(self.params):

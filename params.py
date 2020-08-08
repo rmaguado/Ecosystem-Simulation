@@ -58,7 +58,7 @@ class Params():
         self.exploration_rate_min = 0.05
         self.exploration_rate_dec = 0.2 / (self.max_epochs * self.min_n_creatures) / 0.75 # last 25% at min
 
-        self.learning_rate = 0.01
+        self.learning_rate = 0.001
         self.retrain_delay = 10
         self.convolutional = True
 
