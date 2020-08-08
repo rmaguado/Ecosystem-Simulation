@@ -57,10 +57,10 @@ class DeepQNetwork(nn.Module):
             flat1 = F.relu(self.fc1(conv_state))
             actions = self.fc2(flat1)
         else:
-            state = T.flatten(state,1)  # flatten starting 1: leaving the batch
+            state = T.flatten(state, 1)  # flatten starting 1: leaving the batch
             flat1 = F.relu(self.fc1(state))
             flat2 = F.relu(self.fc2(flat1))
             actions = self.fc3(flat2)
 
         return actions
-
+    

@@ -3,6 +3,8 @@ Agent Class.
 """
 from random import sample, seed
 from collections import deque
+from pickle import load, dump
+import gzip
 import numpy as np
 import torch as T
 from neuralnet import DeepQNetwork
@@ -107,9 +109,12 @@ class Agent():
 
         self.align_counter += 1
 
-    # netwok 
+    # netwok
 
     def get_weights(self):
+        """
+        Gets the weights from network
+        """
         return self.q_eval.state_dict()
 
     def inherit_network(self, weights):
@@ -156,4 +161,3 @@ class Agent():
         f_name = gzip.open(fname, "rb")
         self.experience_replay = load(f_name)
         f_name.close()
-

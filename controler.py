@@ -7,8 +7,6 @@ import os
 import sys
 import select
 import termios
-from pickle import load, dump
-import gzip
 import numpy
 from params import Params
 from environment import Environment
