@@ -1,7 +1,6 @@
 """
 Entities Class
 """
-import time
 from random import randint, seed
 import numpy as np
 from params import Params
@@ -30,23 +29,9 @@ class Entities():
             self.spawn_creature()
 
         if self.params.verbose:
-            self.date_time = time.strftime("%Y.%m.%d-%H.%M.%S")
-            self.timestart = time.time()
-            self.actions = ['left ', 'up   ', 'right', 'down ', 'eat  ', 'repro']
-            # logs header
-            line = "epoch\tsecs\trandom\tcreatures\tcreature\tstrength\tenergy\tpos_x\tpos_y\taction\treward\tleft\tup\tright\tdown\teat\trepro\n"
-            with open(f"out/log_out-{self.date_time}.tsv", "w") as fname:
-                fname.write(line)
-
-            header = "Parameters:\n\n"
-            with open(f"out/par_run-{self.date_time}.tsv", "w") as fname:
-                fname.write(header)
-            for i in dir(self.params):
-                if i[0:1] != "_" and not callable(getattr(self.params, i)):
-                    line = f'{i:>30}:\t {getattr(self.params, i)}\n'
-                    with open(f"out/par_run-{self.date_time}.tsv", "a") as fname:
-                        fname.write(line)
-
+            self.logs = Logs(self.environment)
+            self.logs.log_run()
+            self.logs.log_header()
 
     def write_creature(self, creature):
         """
@@ -188,11 +173,7 @@ class Entities():
 
         # logs
         if self.params.verbose:
-            elapsed = time.time() - self.timestart
-            self.timestart = time.time()
-            line = f"{self.environment.epoch:>6}\t{elapsed:8.5f}\t{str(self.random_policy)[0:1]}\t{len(self.creatures):>3}\t{creature.creature_id:12.10f}\t{creature.strength:8.5f}\t{creature.energy:6.2f}\t{creature.pos_x:5}\t{creature.pos_y:5}\t{self.actions[action]}\t{reward:>4}\t" + np.array2string(q_table, formatter={'float_kind':lambda x: "%#8.1f" % x}, separator="\t")[2:-2] + "\n"
-            with open(f"out/log_out-{self.date_time}.tsv", "a") as fname:
-                fname.write(line)
+            self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, q_table)
 
         return terminated
 

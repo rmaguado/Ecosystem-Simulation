@@ -1,4 +1,4 @@
-l<-read.delim("log_out-2020.08.07-17.09.59.tsv", na.strings = ".")
+l<-as.data.frame(fread("log_out-2020.08.07-18.40.39.tsv", na.strings = ".", fill=T))
 
 summary(l)
 Table(is.na(l$q_val)) # ~ 25%
