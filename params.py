@@ -21,7 +21,7 @@ class Params():
         self.seed = None # 131
         self.logs_thin = 10 # log each n epochs
 
-        self.cuda = "cuda:1"
+        self.cuda = "cuda:0"
 
         # environment
         self.grid_size = 20
@@ -43,7 +43,7 @@ class Params():
 
         # Q & NN
 
-        self.convolutional = True
+        self.convolutional = False
 
         self.max_epochs = 200000
 
