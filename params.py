@@ -19,6 +19,7 @@ class Params():
         self.verbose = True
         self.simulate = False
         self.seed = None # 131
+        self.logs_thin = 10 # log each n epochs
 
         self.cuda = "cuda:1"
 
@@ -44,7 +45,7 @@ class Params():
 
         self.convolutional = True
 
-        self.max_epochs = 100000
+        self.max_epochs = 200000
 
         self.discount = 0.95
         self.general_nn = True
