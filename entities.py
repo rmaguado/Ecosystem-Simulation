@@ -133,9 +133,10 @@ class Entities():
 
     def action(self, creature):
         """
-        Get an action from the Neural Net,
-        Call the function,
-        Store the rewards and states.
+        Get an action from the Neural Net (or random)
+        Perform the action
+        Store the rewards and nex_state
+        Return if terminated
         """
         # state
         state = self.get_state(creature.pos_x, creature.pos_y)
@@ -151,7 +152,7 @@ class Entities():
         if self.exploration_rate < self.params.exploration_rate_min:
             self.exploration_rate = self.params.exploration_rate_min
 
-        #reward
+        # init
         reward = None
         terminated = None
         end = False

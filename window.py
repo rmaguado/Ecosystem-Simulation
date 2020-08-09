@@ -86,7 +86,7 @@ class Window():
 
         return update
 
-    def render(self, environment, entities):
+    def render(self, environment, entities, epoch):
         """
         Render
         """
@@ -165,6 +165,11 @@ class Window():
                                      grid_width / 3 - 2 * self.gap,
                                      self.height - self.y_boundary - self.gap)
                         )
+        # display epoch
+
+        font = pygame.font.Font(pygame.font.get_default_font(), 16)
+        text = font.render('Epoch: '+str(epoch), True, (0, 0, 0))
+        self.canvas.blit(text, dest=(self.height - self.y_boundary, grid_width))
 
         pygame.display.flip()
 
