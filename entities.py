@@ -154,6 +154,8 @@ class Entities():
         #reward
         reward = None
         terminated = None
+        end = False
+
         # hide from grid
         self.erase_creature(creature)
         # energy cost
@@ -174,24 +176,26 @@ class Entities():
 
         # if creature has run out of energy it dies
         if creature.check_living(): # energy > 0
-            if not terminated or (terminated and terminated != creature): # terminated.creature_id != creature.creature_id):
+            if not terminated or (terminated and terminated != creature):
                 # unhide from grid
                 self.write_creature(creature)
         else: # exhausetd energy
             self.erase_creature(creature)
             terminated = creature
             reward = self.params.reward_death
+            end = True
 
         # reward creature based on moving away from danger
         if self.check_death(creature):
             reward = self.params.reward_evasion
+            end = True
 
         # store in memory_replay and update random_policy
-        self.random_policy = creature.store_experience(state, action, reward, future_state=self.get_state(creature.pos_x, creature.pos_y))
+        self.random_policy = creature.store_experience(state, action, reward, self.get_state(creature.pos_x, creature.pos_y), end)
 
         # logs
         if self.params.verbose:
-            self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, q_table)
+            self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, end, q_table)
 
         return terminated
 

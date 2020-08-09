@@ -110,11 +110,11 @@ class Creature():
 
         return q_table
 
-    def store_experience(self, state, action, reward, future_state):
+    def store_experience(self, state, action, reward, future_state, end):
         """
         Stores rewards and states for the neural network to experience recall.
         """
-        return self.neural_net.store(state, action, reward, future_state)
+        return self.neural_net.store(state, action, reward, future_state, end)
 
     def get_reproductive_cost(self):
         """
