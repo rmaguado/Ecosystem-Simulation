@@ -35,11 +35,11 @@ class Agent():
         self.loss = 0
         self.agent_hash = randint(1, 10000000)
 
-    def store(self, state, action, reward, next_state):
+    def store(self, state, action, reward, next_state, end):
         """
         Store rewards and states for experience replay.
         """
-        self.experience_replay.append((state, action, reward, next_state))
+        self.experience_replay.append((state, action, reward, next_state, end))
         if self.run_counter % self.params.batch_size == 0:
             self.loss = self.retrain()
         self.run_counter += 1
@@ -58,23 +58,26 @@ class Agent():
         """
         batch = sample(self.experience_replay, self.params.batch_size)
 
-        states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
-        actions = np.zeros(self.params.batch_size)
-        rewards = np.zeros(self.params.batch_size)
-        future_states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid))
+        states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid), dtype=np.float32)
+        actions = np.zeros(self.params.batch_size, dtype=np.int8)
+        rewards = np.zeros(self.params.batch_size, dtype=np.int8)  # {-128 to 127}
+        future_states = np.zeros((self.params.batch_size, self.params.state_features, self.params.vision_grid, self.params.vision_grid), dtype=np.float32)
+        ends = np.ndarray(self.params.batch_size, dtype=bool)
 
         for i in range(self.params.batch_size):
             states[i] = batch[i][0]
             actions[i] = batch[i][1]
             rewards[i] = batch[i][2]
             future_states[i] = batch[i][3]
+            ends[i] = batch[i][4]
 
         states = T.tensor(states, dtype=T.float32).to(self.q_eval.device)
         actions = T.tensor(actions, dtype=T.int64).to(self.q_eval.device)
         rewards = T.tensor(rewards, dtype=T.float32).to(self.q_eval.device)
         future_states = T.tensor(future_states, dtype=T.float32).to(self.q_eval.device)
+        ends = T.tensor(ends, dtype=T.bool).to(self.q_eval.device)
 
-        return states, actions, rewards, future_states
+        return states, actions, rewards, future_states, ends
 
     def act(self, state):
         """
@@ -96,12 +99,13 @@ class Agent():
 
         if len(self.experience_replay) >= self.params.batch_size:
 
-            states, actions, rewards, future_states = self.sample_memory()
+            states, actions, rewards, future_states, ends = self.sample_memory()
             indices = np.arange(self.params.batch_size)
 
             q_pred = self.q_eval.forward(states)[indices, actions]
             q_next = self.q_next.forward(future_states).max(dim=1)[0]
 
+            q_next[ends] = 0.0
             q_target = rewards + self.params.discount * q_next
 
             loss = self.q_eval.loss(q_target, q_pred).to(self.q_eval.device)

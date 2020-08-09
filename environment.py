@@ -24,4 +24,4 @@ class Environment():
             self.grass = np.ones((self.params.grid_size, self.params.grid_size))    # 1
         else:                                                                       # grow max 1
             self.grass += self.params.grass_grow_rate
-            self.grass = np.where(self.grass >= 1, self.grass, 1)
+            self.grass = np.where(self.grass <= 1, self.grass, 1)

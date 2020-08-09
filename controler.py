@@ -96,14 +96,16 @@ class Controler():
         """
         Render
         """
-        self.window.render(self.environment.grass, self.entities.creatures)
+        self.window.render(self.environment.grass, self.entities.creatures, self.epoch)
 
-    def refresh(self):
+    def refresh(self, sleep=0):
         """
         Update screen
         """
         if self.window.handle_event():
             self.render()
+        time.sleep(sleep)
+
 
     def next_epoch(self):
         """
@@ -170,9 +172,8 @@ class Controler():
         self.console()
 
         while self.running:
-            if self.params.window_show:
-                self.refresh()
-            time.sleep(0.01)
+            if self.params.window_show and not self.entities.random_policy:
+                self.refresh(sleep=0.1)  # wait until initial random end
 
             if select.select([sys.stdin,], [], [], 0.0)[0]:
                 args = input().split()
@@ -214,8 +215,7 @@ class Controler():
             print(f"Running for {self.params.max_epochs} epochs")
         for _ in range(self.params.max_epochs):
             if self.params.window_show:
-                self.refresh()
-                time.sleep(0.01)
+                self.refresh(sleep=.1)
                 if self.window.quit_command:
                     self.window.close_window()
                     break
