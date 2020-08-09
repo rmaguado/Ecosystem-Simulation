@@ -195,7 +195,7 @@ class Entities():
         self.random_policy = creature.store_experience(state, action, reward, self.get_state(creature.pos_x, creature.pos_y), end)
 
         # logs
-        if self.params.verbose and self.epoch % self.params.logs_thin == 0:
+        if self.params.verbose and self.environment.epoch % self.params.logs_thin == 0:
             self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, end, q_table)
 
         return terminated
