@@ -134,6 +134,7 @@ class Entities():
             for peval, ptarget in zip(self.general_nn.q_eval.parameters(), self.general_nn.q_next.parameters()):
                 pdiff += (peval.data-ptarget.data).abs().sum()
             self.general_nn.writer.add_scalar('Param diff', pdiff, global_step=self.general_nn.align_counter)
+        self.general_nn.writer.add_scalar('Exploration rate', self.exploration_rate, global_step=self.general_nn.align_counter)
 
         # log loss
         if self.params.verbose:
@@ -163,6 +164,8 @@ class Entities():
         self.exploration_rate -= self.params.exploration_rate_dec
         if self.exploration_rate < self.params.exploration_rate_min:
             self.exploration_rate = self.params.exploration_rate_min
+
+    
 
         # init
         reward = None
