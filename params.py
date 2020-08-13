@@ -45,7 +45,7 @@ class Params():
 
         # Q & NN
 
-        self.convolutional = True
+        self.convolutional = False
 
         self.max_epochs = 100000
 
