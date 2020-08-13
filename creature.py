@@ -98,7 +98,7 @@ class Creature():
         """
         new_value = 1
         while new_value >= 1: # wwant < 1
-            new_value = value * uniform(1-self.params.relatedness, 1+self.params.relatedness)
+            new_value = value * (1+ uniform(-self.params.relatedness, +self.params.relatedness))
 
         return new_value
 
@@ -134,4 +134,4 @@ class Creature():
         """
         difference = abs(self.creature_id - creature.creature_id)
 
-        return difference < self.params.relatedness * self.params.relatedness_rate
+        return difference <= self.params.relatedness

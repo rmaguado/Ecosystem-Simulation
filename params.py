@@ -19,7 +19,9 @@ class Params():
         self.verbose = True
         self.simulate = False
         self.seed = None # 131
-        self.logs_thin = 10 # log each n epochs
+
+        self.logs_thin = 100 # log each n epochs
+        self.logs_random = False # log initial random actions
 
         self.cuda = "cuda:1"
 
@@ -28,11 +30,11 @@ class Params():
         self.starting_creatures = 20
         self.min_n_creatures = 10
 
-        self.grass_grow_rate = 0.05
-        self.relatedness = 0.01
-        self.relatedness_rate = 0.1
+        self.relatedness = 0.02
 
-        self.energy_cost = .1
+        self.grass_grow_rate = 0.05
+
+        self.energy_cost = .2
         self.energy_eat = 5
         self.energy_eat_transfer_rate = 0.5
         self.energy_reprod_transfer_rate = 0.5
@@ -45,31 +47,31 @@ class Params():
 
         self.convolutional = True
 
-        self.max_epochs = 200000
+        self.max_epochs = 100000
 
         self.discount = 0.95
-        self.general_nn = True
 
+        self.general_nn = True
         self.inherit_nn = None # "weights-2020.   .model"
 
-        self.batch_size = 512
+        self.batch_size = 256
 
-        self.memory_size = 2**16 # 65536 experience replay
+        self.memory_size = self.batch_size * 100 # 2**16 # 65536 experience replay
         self.memory_load = None # "stack-2020.   .memory"
 
-        self.training_random = 2**16
+        self.training_random = self.batch_size * 20
         self.exploration_rate = 0.25
         self.exploration_rate_min = 0.05
-        self.exploration_rate_dec = 0.2 / (self.max_epochs * self.min_n_creatures) / 0.75 # last 25% at min
+        self.exploration_rate_dec = (self.exploration_rate - self.exploration_rate_min) / (self.max_epochs * self.min_n_creatures) / 0.75 # last 25% at min
 
         self.learning_rate = 0.001
-        self.retrain_delay = 10
+        self.retrain_delay = 20
 
-        self.reward_death = -1
-        self.reward_evasion = -0.5
+        self.reward_death = -0.8
+        self.reward_evasion = -0.4
         self.reward_default = 0
         self.reward_predation = 0
-        self.reward_repro = 1
+        self.reward_repro = 1.0
 
     def reproductive_cost(self, strength):
         """

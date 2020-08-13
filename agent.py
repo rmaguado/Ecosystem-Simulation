@@ -5,8 +5,10 @@ from random import sample, randint, seed
 from collections import deque
 from pickle import load, dump
 import gzip
+import time
 import numpy as np
 import torch as T
+from torch.utils.tensorboard import SummaryWriter
 from neuralnet import DeepQNetwork
 from params import Params
 
@@ -25,28 +27,45 @@ class Agent():
 
         self.experience_replay = deque(maxlen=self.params.memory_size)
 
-        self.run_counter = 1
-        self.align_counter = 1
+        self.run_counter = 1    # creature counter
+        self.align_counter = 1  # batch retrain counter
         self.q_eval = DeepQNetwork()
         self.q_next = DeepQNetwork()
+
+        # tensorboard
+        self.writer = self.board()
+        self.cum_reward = 0
 
         self.align_target()
         self.random_action = True
         self.loss = 0
         self.agent_hash = randint(1, 10000000)
 
+    def board(self):
+        '''
+        TensorBoard Writer Setup
+        '''
+        log_name = "run-" + time.strftime("%Y.%m.%d-%H.%M.%S")
+        writer = SummaryWriter(log_dir=f"runs/{log_name}")
+        print("To see tensorboard, run: tensorboard --logdir=runs/")
+
+        return writer
+
     def store(self, state, action, reward, next_state, end):
         """
         Store rewards and states for experience replay.
         """
         self.experience_replay.append((state, action, reward, next_state, end))
-        if self.run_counter % self.params.batch_size == 0:
+        if self.run_counter % self.params.batch_size == 0:  # retrain if new batch completed
             self.loss = self.retrain()
+
+        self.cum_reward += reward
+
         self.run_counter += 1
 
         # end of random
         if self.run_counter >= self.params.training_random:
-            if self.random_action:
+            if self.params.verbose and self.random_action:
                 print(f"End of {self.params.training_random} initial random experiences")
             self.random_action = False
 
@@ -94,17 +113,16 @@ class Agent():
         """
         Train the neural net from a sample of the experience replay items.
         """
-        if self.align_counter % self.params.retrain_delay == 0:
+        if self.align_counter % self.params.retrain_delay == 0: # align_counter increased each batch is retrained
             self.align_target()
 
-        if len(self.experience_replay) >= self.params.batch_size:
+        if len(self.experience_replay) >= self.params.batch_size: # skip if experience not enough to sample
 
             states, actions, rewards, future_states, ends = self.sample_memory()
             indices = np.arange(self.params.batch_size)
 
             q_pred = self.q_eval.forward(states)[indices, actions]
             q_next = self.q_next.forward(future_states).max(dim=1)[0]
-
             q_next[ends] = 0.0
             q_target = rewards + self.params.discount * q_next
 
@@ -114,7 +132,10 @@ class Agent():
             loss.backward()
             self.q_eval.optimizer.step()
 
-        self.align_counter += 1
+            self.writer.add_scalar('Loss', loss, global_step=self.align_counter)
+
+            self.align_counter += 1
+
 
         return loss.item()
 

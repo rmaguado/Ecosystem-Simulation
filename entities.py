@@ -36,6 +36,7 @@ class Entities():
             self.logs.log_run()
             self.logs.log_header()
             self.batch_counter = self.general_nn.align_counter  # starts 1
+            self.logs_random = not self.params.logs_random and self.random_policy
 
     def write_creature(self, creature):
         """
@@ -44,7 +45,7 @@ class Entities():
         self.entity_grid[creature.pos_x][creature.pos_y][0] = 1
         self.entity_grid[creature.pos_x][creature.pos_y][1] = creature.creature_id
         self.entity_grid[creature.pos_x][creature.pos_y][2] = creature.strength
-        self.entity_grid[creature.pos_x][creature.pos_y][3] = 1 / creature.energy
+        self.entity_grid[creature.pos_x][creature.pos_y][3] = creature.energy # 1 / creature.energy
 
     def erase_creature(self, creature):
         """
@@ -114,6 +115,7 @@ class Entities():
         """
         Each creature takes a turn.
         """
+        self.general_nn.cum_reward = 0
         terminated = []
         for i in self.creatures:
             if not i in terminated:
@@ -122,6 +124,16 @@ class Entities():
                     terminated.append(term)   # marks for deletion
         for i in terminated:
             self.delete_creature(i)
+
+        # board
+        self.general_nn.writer.add_scalar('Avg reward', self.general_nn.cum_reward/len(self.creatures), global_step=self.general_nn.align_counter)
+        self.general_nn.writer.add_scalar('Creatures', len(self.creatures), global_step=self.general_nn.align_counter)
+        if self.general_nn.align_counter > 1:
+            self.general_nn.writer.add_histogram('Actions', np.array([self.general_nn.experience_replay[i][1] for i in range(0, -self.params.batch_size, -1)]), global_step=self.general_nn.align_counter)
+            pdiff = 0
+            for peval, ptarget in zip(self.general_nn.q_eval.parameters(), self.general_nn.q_next.parameters()):
+                pdiff += (peval.data-ptarget.data).abs().sum()
+            self.general_nn.writer.add_scalar('Param diff', pdiff, global_step=self.general_nn.align_counter)
 
         # log loss
         if self.params.verbose:
@@ -143,7 +155,7 @@ class Entities():
         # action
         if np.random.rand() < self.params.exploration_rate or self.random_policy:
             action = randint(0, self.params.action_size-1)
-            q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size)
+            q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size) -1
         else:
             action, q_table = creature.neural_net.act(state)
 
@@ -186,7 +198,7 @@ class Entities():
             reward = self.params.reward_death
             end = True
 
-        # reward creature based on moving away from danger
+        # evasion: reward creature based on moving away from danger
         if self.check_death(creature):
             reward = self.params.reward_evasion
             end = True
@@ -195,7 +207,10 @@ class Entities():
         self.random_policy = creature.store_experience(state, action, reward, self.get_state(creature.pos_x, creature.pos_y), end)
 
         # logs
-        if self.params.verbose and self.environment.epoch % self.params.logs_thin == 0:
+        self.logs_random = self.logs_random and self.random_policy
+        if (self.params.verbose and
+                not self.logs_random and                                 # log initial random
+                self.environment.epoch % self.params.logs_thin == 0):    # only creatures of some epochs
             self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, end, q_table)
 
         return terminated
@@ -226,7 +241,7 @@ class Entities():
                     creature.pos_x += x_change
                     creature.pos_y += y_change
                     creature.energy += competitor.energy * self.params.energy_eat_transfer_rate # ** halved
-                    # check if creatures were related (anti-cannibalism rewarding)
+                    # check if creatures were related (anti-cannibalism rewarding: same as death)
                     if creature.check_related(competitor):
                         reward = self.params.reward_death
                     else:

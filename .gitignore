@@ -4,3 +4,4 @@ out/*.memory
 out/*.model
 .ipynb*
 .vscode
+runs
