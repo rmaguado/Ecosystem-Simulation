@@ -28,7 +28,7 @@ class Params():
         # environment
         self.grid_size = 20
         self.starting_creatures = 20
-        self.min_n_creatures = 2
+        self.min_n_creatures = 10
 
         self.relatedness = 0.02
 
@@ -67,11 +67,11 @@ class Params():
         self.learning_rate = 0.001
         self.retrain_delay = 10
 
-        self.reward_death = -0.8
-        self.reward_evasion = -0.4
+        self.reward_death = -5
+        self.reward_evasion = -4
         self.reward_default = 0
         self.reward_predation = 0
-        self.reward_repro = 0.5
+        self.reward_repro = 5
 
     def reproductive_cost(self, strength):
         """

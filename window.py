@@ -120,8 +120,10 @@ class Window():
 
         # draw entities as circles
         for entity in enumerate(entities):
-            strength = entity[1].strength
-            color = (168 - 118 * (1 - strength), 50 + 50 * (1 - strength), 78 + 90 * (1 - strength))
+#            strength = entity[1].strength
+#            color = (168 - 118 * (1 - strength), 50 + 50 * (1 - strength), 78 + 90 * (1 - strength))
+            related = entity[1].creature_id
+            color = (168 - 118 * (1 - related), 50 + 50 * (1 - related), 78 + 90 * (1 - related))
 
             var_x = entity[1].pos_x
             var_y = entity[1].pos_y
