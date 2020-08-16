@@ -17,6 +17,7 @@ class Params():
         self.interactive = False
         self.window_show = True
         self.verbose = True
+        self.tensorboard = True
         self.simulate = False
         self.seed = None # 131
 

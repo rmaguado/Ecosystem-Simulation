@@ -125,16 +125,17 @@ class Entities():
         for i in terminated:
             self.delete_creature(i)
 
-        # board: each epoch
-        self.general_nn.writer.add_scalar('Avg reward', self.general_nn.cum_reward/len(self.creatures), global_step=self.general_nn.align_counter)
-        self.general_nn.writer.add_scalar('Creatures', len(self.creatures), global_step=self.general_nn.align_counter)
-        self.general_nn.writer.add_scalar('Exploration', self.exploration_rate, global_step=self.general_nn.align_counter)
-        if self.general_nn.align_counter > 1:
-            self.general_nn.writer.add_histogram('Actions', np.array([self.general_nn.experience_replay[i][1] for i in range(0, -self.params.batch_size, -1)]), global_step=self.general_nn.align_counter)
-            pdiff = 0
-            for peval, ptarget in zip(self.general_nn.q_eval.parameters(), self.general_nn.q_next.parameters()):
-                pdiff += (peval.data-ptarget.data).abs().sum()
-            self.general_nn.writer.add_scalar('Param diff', pdiff, global_step=self.general_nn.align_counter)
+        if self.params.tensorboard:
+            # board: each epoch
+            self.general_nn.writer.add_scalar('Avg reward', self.general_nn.cum_reward/len(self.creatures), global_step=self.general_nn.align_counter)
+            self.general_nn.writer.add_scalar('Creatures', len(self.creatures), global_step=self.general_nn.align_counter)
+            self.general_nn.writer.add_scalar('Exploration', self.exploration_rate, global_step=self.general_nn.align_counter)
+            if self.general_nn.align_counter > 1:
+                self.general_nn.writer.add_histogram('Actions', np.array([self.general_nn.experience_replay[i][1] for i in range(0, -self.params.batch_size, -1)]), global_step=self.general_nn.align_counter)
+                pdiff = 0
+                for peval, ptarget in zip(self.general_nn.q_eval.parameters(), self.general_nn.q_next.parameters()):
+                    pdiff += (peval.data-ptarget.data).abs().sum()
+                self.general_nn.writer.add_scalar('Param diff', pdiff, global_step=self.general_nn.align_counter)
 
         # log loss
         if self.params.verbose:
@@ -212,8 +213,8 @@ class Entities():
         # logs
         if self.params.verbose:
             self.logs_random = self.logs_random and self.random_policy
-            if (not self.logs_random and                                 # log initial random
-                self.environment.epoch % self.params.logs_thin == 0):    # only creatures of some epochs
+            if (not self.logs_random and                                     # log initial random
+                    self.environment.epoch % self.params.logs_thin == 0):    # only creatures of some epochs
                 self.logs.log_iteration(self.environment.epoch, self.random_policy, self.creatures, creature, action, reward, end, q_table)
 
         return terminated
