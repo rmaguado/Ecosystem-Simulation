@@ -133,6 +133,7 @@ class Agent():
             self.q_eval.optimizer.step()
 
             self.writer.add_scalar('Loss', loss, global_step=self.align_counter)
+            self.writer.add_graph(self.q_eval, states)
 
             self.align_counter += 1
 
