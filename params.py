@@ -61,6 +61,7 @@ class Params():
 
         self.memory_size = self.batch_size * 100 # 2**16 # 65536 experience replay
         self.memory_load = None # "stack-2020.   .memory"
+        self.save_model = True
 
         self.training_random = self.batch_size * 20
         self.exploration_rate = 0.25

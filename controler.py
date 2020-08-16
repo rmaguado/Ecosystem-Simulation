@@ -65,7 +65,7 @@ class Controler():
             self.loop()
 
         # save neural network & experience_replay
-        if self.params.general_nn:
+        if self.params.save_model and self.params.general_nn:
             self.general_nn.save_network(fname=f"out/weights-{self.date_time}.model")
             self.general_nn.save_memory(fname=f"out/stack-{self.date_time}.memory")
 
