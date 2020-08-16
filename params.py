@@ -16,6 +16,8 @@ class Params():
         # run
         self.interactive = False
         self.window_show = True
+        self.dpi = 72*2
+
         self.verbose = True
         self.tensorboard = True
         self.simulate = False
@@ -73,7 +75,7 @@ class Params():
         self.reward_default = 0
         self.reward_predation = 0
         self.reward_repro = 5
-
+        
     def reproductive_cost(self, strength):
         """
         Calculate reproductive cost proportional to creature strength.
