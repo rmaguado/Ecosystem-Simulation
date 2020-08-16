@@ -125,9 +125,10 @@ class Entities():
         for i in terminated:
             self.delete_creature(i)
 
-        # board
+        # board: each epoch
         self.general_nn.writer.add_scalar('Avg reward', self.general_nn.cum_reward/len(self.creatures), global_step=self.general_nn.align_counter)
         self.general_nn.writer.add_scalar('Creatures', len(self.creatures), global_step=self.general_nn.align_counter)
+        self.general_nn.writer.add_scalar('Exploration', self.exploration_rate, global_step=self.general_nn.align_counter)
         if self.general_nn.align_counter > 1:
             self.general_nn.writer.add_histogram('Actions', np.array([self.general_nn.experience_replay[i][1] for i in range(0, -self.params.batch_size, -1)]), global_step=self.general_nn.align_counter)
             pdiff = 0
@@ -153,7 +154,7 @@ class Entities():
         # state
         state = self.get_state(creature.pos_x, creature.pos_y)
         # action
-        if np.random.rand() < self.params.exploration_rate or self.random_policy:
+        if np.random.rand() < self.exploration_rate or self.random_policy:
             action = randint(0, self.params.action_size-1)
             q_table = np.zeros(self.params.action_size).reshape(1, self.params.action_size) -1
         else:
@@ -163,6 +164,8 @@ class Entities():
         self.exploration_rate -= self.params.exploration_rate_dec
         if self.exploration_rate < self.params.exploration_rate_min:
             self.exploration_rate = self.params.exploration_rate_min
+
+
 
         # init
         reward = None

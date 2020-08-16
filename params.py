@@ -15,7 +15,7 @@ class Params():
 
         # run
         self.interactive = False
-        self.window_show = False
+        self.window_show = True
         self.verbose = True
         self.simulate = False
         self.seed = None # 131
@@ -47,7 +47,7 @@ class Params():
 
         self.convolutional = True
 
-        self.max_epochs = 100000
+        self.max_epochs = 10000
 
         self.discount = 0.95
 
@@ -65,16 +65,16 @@ class Params():
         self.exploration_rate_dec = (self.exploration_rate - self.exploration_rate_min) / (self.max_epochs * self.min_n_creatures) / 0.75 # last 25% at min
 
         self.learning_rate = 0.001
-        self.retrain_delay = 20
+        self.retrain_delay = 10
 
-        self.reward_death = -0.8
-        self.reward_evasion = -0.4
+        self.reward_death = -5
+        self.reward_evasion = -4
         self.reward_default = 0
         self.reward_predation = 0
-        self.reward_repro = 1.0
+        self.reward_repro = 5
 
     def reproductive_cost(self, strength):
         """
         Calculate reproductive cost proportional to creature strength.
         """
-        return strength * 25 + 5
+        return strength * 20 + 5
