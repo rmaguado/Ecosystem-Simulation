@@ -134,6 +134,7 @@ class Agent():
             self.q_eval.optimizer.step()
 
             if self.params.tensorboard:
+                # track loss and inspect graph
                 self.writer.add_scalar('Loss', loss, global_step=self.align_counter)
                 self.writer.add_graph(self.q_eval, states)
 
