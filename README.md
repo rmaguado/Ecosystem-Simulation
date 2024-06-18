@@ -1,11 +1,6 @@
-# Ecosystem-Simulation
+# Game of life with Q-Learning
 
-there are agents that interact with one another:
-
-- the environment aka the grass
-- a q-learning style neural network class
-- instances of a creature class that inherit the neural network class
-- a grid for creatures to move in / eat others / reproduce
+The environment includes creatures that are each an instance of a RL agent. Each instance occupies a square in a grid and has a score of their energy. An instance can perform the following actions which consume energy: move, consume grass, and reproduce. An instance is removed when it starves. 
 
 dependencies:
 
